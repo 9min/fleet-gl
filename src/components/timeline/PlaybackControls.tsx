@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { useSimulationStore } from '@/stores/simulationStore';
 import type { PlaybackSpeed } from '@/types/simulation';
 
-const SPEEDS: PlaybackSpeed[] = [1, 2, 4, 8];
+const SPEEDS: PlaybackSpeed[] = [60, 120, 300, 600];
 
 const PlaybackControls = () => {
   const isPlaying = useSimulationStore((s) => s.isPlaying);
@@ -47,7 +47,7 @@ const PlaybackControls = () => {
                 : 'text-text-secondary hover:text-text-primary'
             }`}
           >
-            {speed}x
+            {speed >= 60 ? `${speed / 60}m/s` : `${speed}x`}
           </button>
         ))}
       </div>
