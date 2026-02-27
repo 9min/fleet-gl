@@ -14,6 +14,12 @@ type UIState = {
 
   isPanelOpen: boolean;
   togglePanel: () => void;
+
+  isShortcutGuideOpen: boolean;
+  toggleShortcutGuide: () => void;
+
+  isPerformanceOverlayOpen: boolean;
+  togglePerformanceOverlay: () => void;
 };
 
 export const useUIStore = create<UIState>()((set) => ({
@@ -31,4 +37,11 @@ export const useUIStore = create<UIState>()((set) => ({
 
   isPanelOpen: false,
   togglePanel: () => set((s) => ({ isPanelOpen: !s.isPanelOpen })),
+
+  isShortcutGuideOpen: false,
+  toggleShortcutGuide: () => set((s) => ({ isShortcutGuideOpen: !s.isShortcutGuideOpen })),
+
+  isPerformanceOverlayOpen: false,
+  togglePerformanceOverlay: () =>
+    set((s) => ({ isPerformanceOverlayOpen: !s.isPerformanceOverlayOpen })),
 }));

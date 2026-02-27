@@ -6,3 +6,11 @@ export const MAP_CONFIG = {
   minZoom: 6,
   maxZoom: 18,
 } as const;
+
+export const ENTRY_ANIMATION = {
+  startZoom: 10,
+  startPitch: 0,
+  startBearing: 0,
+  duration: 3000,
+  autoPlayDelay: 500,
+} as const;

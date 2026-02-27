@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { createVehicleLayer } from '@/layers/vehicleLayer';
 import { createTripsLayer, createTripsLayerData } from '@/layers/tripsLayer';
+import { createLabelLayer } from '@/layers/labelLayer';
 import { useUIStore } from '@/stores/uiStore';
 import { useSimulationStore } from '@/stores/simulationStore';
 import type { VehiclePosition } from '@/types/vehicle';
@@ -31,6 +32,9 @@ export const useDeckLayers = (
       createVehicleLayer(filtered, {
         selectedId: selectedVehicleId,
         filters,
+      }),
+      createLabelLayer(filtered, {
+        selectedId: selectedVehicleId,
       }),
     ];
   }, [vehiclePositions, tripsData, currentTime, selectedVehicleId, filters]);

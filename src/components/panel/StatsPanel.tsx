@@ -1,4 +1,5 @@
 import { useSimulationStore } from '@/stores/simulationStore';
+import AnimatedNumber from './AnimatedNumber';
 
 type StatRowProps = {
   label: string;
@@ -13,7 +14,10 @@ const StatRow = ({ label, value, total, color }: StatRowProps) => {
     <div className="flex items-center gap-3">
       <div className={`w-2 h-2 rounded-full`} style={{ backgroundColor: color }} />
       <span className="text-text-secondary text-sm flex-1">{label}</span>
-      <span className="font-mono text-sm text-text-primary w-8 text-right">{value}</span>
+      <AnimatedNumber
+        value={value}
+        className="font-mono text-sm text-text-primary w-8 text-right"
+      />
       <div className="w-20 h-1.5 bg-white/10 rounded-full overflow-hidden">
         <div
           className="h-full rounded-full transition-all duration-300"
@@ -27,12 +31,24 @@ const StatRow = ({ label, value, total, color }: StatRowProps) => {
 
 const StatsPanel = () => {
   const stats = useSimulationStore((s) => s.stats);
+  const isPlaying = useSimulationStore((s) => s.isPlaying);
 
   return (
     <div className="glass-panel p-4 flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-text-primary">Fleet Status</h2>
-        <span className="font-mono text-lg text-accent-cyan">{stats.totalVehicles}</span>
+        <div className="flex items-center gap-2">
+          <h2 className="text-sm font-semibold text-text-primary">Fleet Status</h2>
+          {isPlaying && (
+            <span className="relative flex items-center">
+              <span className="absolute w-2.5 h-2.5 rounded-full bg-accent-red animate-pulse-live" />
+              <span className="relative w-1.5 h-1.5 rounded-full bg-accent-red" />
+            </span>
+          )}
+        </div>
+        <AnimatedNumber
+          value={stats.totalVehicles}
+          className="font-mono text-lg text-accent-cyan"
+        />
       </div>
 
       <div className="flex flex-col gap-2">
@@ -47,7 +63,11 @@ const StatsPanel = () => {
       <div className="border-t border-white/10 pt-2">
         <div className="flex items-center justify-between">
           <span className="text-text-secondary text-sm">Progress</span>
-          <span className="font-mono text-sm text-accent-green">{stats.progressPercent}%</span>
+          <AnimatedNumber
+            value={stats.progressPercent}
+            className="font-mono text-sm text-accent-green"
+            formatter={(n) => `${n}%`}
+          />
         </div>
         <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden mt-1">
           <div

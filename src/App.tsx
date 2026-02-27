@@ -7,11 +7,14 @@ import LoadingScreen from '@/components/layout/LoadingScreen';
 import { useVehicleData } from '@/hooks/useVehicleData';
 import { useInterpolation } from '@/hooks/useInterpolation';
 import { useDeckLayers } from '@/hooks/useDeckLayers';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 
 const App = () => {
   const { routes, loading } = useVehicleData();
   const { positions, ready, seek } = useInterpolation(routes);
   const layers = useDeckLayers(positions, routes);
+
+  useKeyboardShortcuts({ seek });
 
   if (loading || !ready) {
     return (
@@ -31,7 +34,7 @@ const App = () => {
         </Sidebar>
       }
     >
-      <MapView layers={layers} />
+      <MapView layers={layers} positions={positions} ready={ready} />
     </Layout>
   );
 };
