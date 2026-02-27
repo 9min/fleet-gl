@@ -5,6 +5,8 @@ dist/
 .env.*.local
 .vscode/
 .idea/
+.claude/
+.vite/
 .DS_Store
 Thumbs.db
 *.log
