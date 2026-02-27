@@ -1,6 +1,14 @@
 import { create } from 'zustand';
 import type { VehicleStatus } from '@/types/vehicle';
 
+type LayerVisibility = {
+  vehicles: boolean;
+  trails: boolean;
+  heatmap: boolean;
+  density: boolean;
+  geofences: boolean;
+};
+
 type UIState = {
   selectedVehicleId: string | null;
   selectVehicle: (id: string | null) => void;
@@ -20,6 +28,12 @@ type UIState = {
 
   isPerformanceOverlayOpen: boolean;
   togglePerformanceOverlay: () => void;
+
+  isAnalyticsPanelOpen: boolean;
+  toggleAnalyticsPanel: () => void;
+
+  layerVisibility: LayerVisibility;
+  toggleLayer: (layer: keyof LayerVisibility) => void;
 };
 
 export const useUIStore = create<UIState>()((set) => ({
@@ -44,4 +58,23 @@ export const useUIStore = create<UIState>()((set) => ({
   isPerformanceOverlayOpen: false,
   togglePerformanceOverlay: () =>
     set((s) => ({ isPerformanceOverlayOpen: !s.isPerformanceOverlayOpen })),
+
+  isAnalyticsPanelOpen: false,
+  toggleAnalyticsPanel: () =>
+    set((s) => ({ isAnalyticsPanelOpen: !s.isAnalyticsPanelOpen })),
+
+  layerVisibility: {
+    vehicles: true,
+    trails: true,
+    heatmap: false,
+    density: false,
+    geofences: true,
+  },
+  toggleLayer: (layer) =>
+    set((s) => ({
+      layerVisibility: {
+        ...s.layerVisibility,
+        [layer]: !s.layerVisibility[layer],
+      },
+    })),
 }));

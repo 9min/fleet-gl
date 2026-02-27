@@ -1,14 +1,41 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bg-dark: #0F1923;
-  --color-bg-card: #1A2332;
+  --color-bg-dark: var(--theme-bg-dark);
+  --color-bg-card: var(--theme-bg-card);
   --color-accent-cyan: #00D4FF;
   --color-accent-green: #00FF88;
   --color-accent-amber: #FFB800;
   --color-accent-red: #FF4757;
-  --color-text-primary: #E8ECF1;
-  --color-text-secondary: #8892A0;
+  --color-text-primary: var(--theme-text-primary);
+  --color-text-secondary: var(--theme-text-secondary);
+}
+
+/* Dark theme (default) */
+:root,
+:root[data-theme="dark"] {
+  --theme-bg-dark: #0F1923;
+  --theme-bg-card: #1A2332;
+  --theme-text-primary: #E8ECF1;
+  --theme-text-secondary: #8892A0;
+  --theme-glass-bg: rgba(26, 35, 50, 0.8);
+  --theme-glass-border: rgba(255, 255, 255, 0.1);
+  --theme-glass-shadow: rgba(0, 0, 0, 0.3);
+  --theme-slider-track: rgba(255, 255, 255, 0.1);
+  --theme-overlay-bg: rgba(0, 0, 0, 0.5);
+}
+
+/* Light theme */
+:root[data-theme="light"] {
+  --theme-bg-dark: #F5F7FA;
+  --theme-bg-card: #FFFFFF;
+  --theme-text-primary: #1A2332;
+  --theme-text-secondary: #6B7280;
+  --theme-glass-bg: rgba(255, 255, 255, 0.85);
+  --theme-glass-border: rgba(0, 0, 0, 0.08);
+  --theme-glass-shadow: rgba(0, 0, 0, 0.08);
+  --theme-slider-track: rgba(0, 0, 0, 0.12);
+  --theme-overlay-bg: rgba(0, 0, 0, 0.3);
 }
 
 html,
@@ -26,10 +53,11 @@ body,
 
 /* Glass panel utility */
 .glass-panel {
-  background: color-mix(in srgb, var(--color-bg-card) 80%, transparent);
+  background: var(--theme-glass-bg);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--theme-glass-border);
   border-radius: 12px;
+  box-shadow: 0 4px 16px var(--theme-glass-shadow);
 }
 
 /* Timeline slider */
@@ -38,7 +66,7 @@ body,
   appearance: none;
   width: 100%;
   height: 4px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--theme-slider-track);
   border-radius: 2px;
   outline: none;
   cursor: pointer;
@@ -83,4 +111,67 @@ body,
 
 .animate-pulse-live {
   animation: pulse-live 1.4s ease-out infinite;
+}
+
+/* Toast slide-in animation */
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes toast-out {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+.animate-toast-in {
+  animation: toast-in 0.3s ease-out;
+}
+
+.animate-toast-out {
+  animation: toast-out 0.3s ease-in forwards;
+}
+
+/* Bottom sheet drag handle */
+.bottom-sheet-handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--theme-text-secondary);
+  opacity: 0.5;
+}
+
+/* Analytics panel slide */
+@keyframes slide-in-left {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 0.3s ease-out;
+}
+
+/* Recharts theme overrides */
+:root[data-theme="light"] .recharts-cartesian-grid line {
+  stroke: rgba(0, 0, 0, 0.08);
+}
+
+:root[data-theme="dark"] .recharts-cartesian-grid line {
+  stroke: rgba(255, 255, 255, 0.06);
 }

@@ -8,6 +8,8 @@ const SHORTCUTS = [
   { keys: ['2'], description: 'Speed ×2 (120s/s)' },
   { keys: ['3'], description: 'Speed ×5 (300s/s)' },
   { keys: ['4'], description: 'Speed ×10 (600s/s)' },
+  { keys: ['T'], description: 'Toggle dark/light theme' },
+  { keys: ['A'], description: 'Toggle analytics panel' },
   { keys: ['P'], description: 'Toggle FPS overlay' },
   { keys: ['Esc'], description: 'Deselect / Close' },
   { keys: ['?'], description: 'Toggle this guide' },

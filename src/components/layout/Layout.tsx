@@ -4,17 +4,21 @@ import Timeline from '@/components/timeline/Timeline';
 import KPIBar from '@/components/panel/KPIBar';
 import PerformanceOverlay from '@/components/panel/PerformanceOverlay';
 import ShortcutGuide from './ShortcutGuide';
+import LayerToggle from '@/components/map/LayerToggle';
 
 type LayoutProps = {
   children: ReactNode;
   sidebar?: ReactNode;
   onSeek: (time: number) => void;
+  toasts?: ReactNode;
+  analyticsPanel?: ReactNode;
+  wsConnected?: boolean;
 };
 
-const Layout = ({ children, sidebar, onSeek }: LayoutProps) => {
+const Layout = ({ children, sidebar, onSeek, toasts, analyticsPanel, wsConnected }: LayoutProps) => {
   return (
     <div className="w-screen h-screen flex flex-col bg-bg-dark">
-      <Header />
+      <Header wsConnected={wsConnected} />
 
       <main className="flex-1 relative overflow-hidden">
         {/* Map fills the main area */}
@@ -22,6 +26,12 @@ const Layout = ({ children, sidebar, onSeek }: LayoutProps) => {
 
         {/* KPI bar overlay top-left */}
         <KPIBar />
+
+        {/* Layer toggle */}
+        <LayerToggle />
+
+        {/* Analytics panel overlay on left */}
+        {analyticsPanel}
 
         {/* Sidebar overlay on right — hidden below lg (1024px) */}
         {sidebar && (
@@ -32,6 +42,9 @@ const Layout = ({ children, sidebar, onSeek }: LayoutProps) => {
 
         {/* Performance overlay bottom-left */}
         <PerformanceOverlay />
+
+        {/* Toast container */}
+        {toasts}
       </main>
 
       <Timeline onSeek={onSeek} />

@@ -12,6 +12,7 @@
     "extract-routes": "tsx scripts/extract-routes.ts"
   },
   "dependencies": {
+    "@deck.gl/aggregation-layers": "^9.2.9",
     "@deck.gl/core": "^9.1.0",
     "@deck.gl/geo-layers": "^9.1.0",
     "@deck.gl/layers": "^9.1.0",
@@ -22,6 +23,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-map-gl": "^7.1.8",
+    "recharts": "^2.15.4",
     "zustand": "^5.0.0"
   },
   "devDependencies": {

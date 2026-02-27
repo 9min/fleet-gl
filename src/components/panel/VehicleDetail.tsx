@@ -1,9 +1,14 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useUIStore } from '@/stores/uiStore';
+import { useSimulationStore } from '@/stores/simulationStore';
+import RouteProgress from './RouteProgress';
 import type { VehiclePosition } from '@/types/vehicle';
+import type { VehicleRoute } from '@/types/route';
+import type { WaypointProgress } from '@/types/routeDetail';
 
 type VehicleDetailProps = {
   positions: VehiclePosition[];
+  routes: VehicleRoute[];
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -20,17 +25,43 @@ const STATUS_DOT_COLORS: Record<string, string> = {
   delayed: '#FF4757',
 };
 
-const VehicleDetail = ({ positions }: VehicleDetailProps) => {
+const VehicleDetail = ({ positions, routes }: VehicleDetailProps) => {
   const selectedVehicleId = useUIStore((s) => s.selectedVehicleId);
   const selectVehicle = useUIStore((s) => s.selectVehicle);
+  const currentTime = useSimulationStore((s) => s.currentTime);
 
   const handleClose = useCallback(() => {
     selectVehicle(null);
   }, [selectVehicle]);
 
-  if (!selectedVehicleId) return null;
+  const vehicle = useMemo(() => {
+    if (!selectedVehicleId) return null;
+    return positions.find((v) => v.vehicleId === selectedVehicleId) ?? null;
+  }, [positions, selectedVehicleId]);
 
-  const vehicle = positions.find((v) => v.vehicleId === selectedVehicleId);
+  const waypointProgress = useMemo((): WaypointProgress[] => {
+    if (!selectedVehicleId || !vehicle) return [];
+    const route = routes.find((r) => r.vehicleId === selectedVehicleId);
+    if (!route) return [];
+
+    return route.waypoints.map((wp, i) => {
+      const isCompleted = vehicle.waypointIndex > i;
+      const isCurrent = vehicle.waypointIndex === i && vehicle.status !== 'completed';
+      // Simulate slight deviation for completed waypoints
+      const deviation = isCompleted ? Math.floor(Math.random() * 600 - 200) : 0;
+
+      return {
+        name: wp.name,
+        plannedArrival: wp.arrivalTime,
+        actualArrival: isCompleted ? wp.arrivalTime + deviation : null,
+        status: isCompleted ? 'completed' : isCurrent ? 'current' : 'upcoming',
+        deviationSeconds: isCompleted ? deviation : 0,
+        lng: wp.lng,
+        lat: wp.lat,
+      };
+    });
+  }, [selectedVehicleId, vehicle?.waypointIndex, vehicle?.status, routes, currentTime]); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (!vehicle) return null;
 
   return (
@@ -89,6 +120,16 @@ const VehicleDetail = ({ positions }: VehicleDetailProps) => {
           </div>
         </div>
       </div>
+
+      {/* Route progress timeline */}
+      {waypointProgress.length > 0 && (
+        <div className="border-t border-white/10 pt-3">
+          <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">
+            Route Progress
+          </h3>
+          <RouteProgress waypoints={waypointProgress} />
+        </div>
+      )}
     </div>
   );
 };

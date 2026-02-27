@@ -16,8 +16,9 @@ export default defineConfig({
         manualChunks: {
           'react-vendor': ['react', 'react-dom'],
           'map-vendor': ['maplibre-gl', 'react-map-gl'],
-          'deck-vendor': ['@deck.gl/core', '@deck.gl/layers', '@deck.gl/geo-layers', '@deck.gl/mapbox', '@deck.gl/mesh-layers'],
+          'deck-vendor': ['@deck.gl/core', '@deck.gl/layers', '@deck.gl/geo-layers', '@deck.gl/mapbox', '@deck.gl/mesh-layers', '@deck.gl/aggregation-layers'],
           'state-vendor': ['zustand'],
+          'chart-vendor': ['recharts'],
         },
       },
     },
