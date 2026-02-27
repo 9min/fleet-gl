@@ -20,7 +20,7 @@ type SimulationState = {
 
 export const useSimulationStore = create<SimulationState>()((set) => ({
   isPlaying: false,
-  playbackSpeed: 120,
+  playbackSpeed: 60,
   currentTime: 0,
   totalDuration: 57600,
 

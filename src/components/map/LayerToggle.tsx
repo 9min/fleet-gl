@@ -1,5 +1,6 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useRef, useEffect } from 'react';
 import { useUIStore } from '@/stores/uiStore';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 type LayerKey = 'vehicles' | 'trails' | 'heatmap' | 'density' | 'geofences';
 
@@ -15,13 +16,32 @@ const LayerToggle = () => {
   const [isOpen, setIsOpen] = useState(false);
   const layerVisibility = useUIStore((s) => s.layerVisibility);
   const toggleLayer = useUIStore((s) => s.toggleLayer);
+  const isMobile = useIsMobile();
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
   const handleToggle = useCallback(() => {
     setIsOpen((prev) => !prev);
   }, []);
 
+  // Close on outside click (especially useful on mobile)
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [isOpen]);
+
+  // Mobile: top-left below KPIBar. Desktop: right of sidebar
+  const positionClass = isMobile
+    ? 'absolute top-12 left-3 z-20'
+    : 'absolute top-4 right-[calc(theme(spacing.4)+theme(spacing.80)+theme(spacing.4))] z-10';
+
   return (
-    <div className="absolute top-4 right-[calc(theme(spacing.4)+theme(spacing.80)+theme(spacing.4))] lg:right-[calc(theme(spacing.4)+theme(spacing.80)+theme(spacing.4))] z-10">
+    <div className={positionClass} ref={wrapperRef}>
       <button
         onClick={handleToggle}
         className="glass-panel w-8 h-8 flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors pointer-events-auto"
