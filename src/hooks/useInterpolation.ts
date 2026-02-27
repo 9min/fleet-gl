@@ -37,6 +37,8 @@ export const useInterpolation = (routes: VehicleRoute[]) => {
       switch (msg.type) {
         case 'READY':
           setReady(true);
+          // Send initial TICK at time 0 to populate starting positions
+          worker.postMessage({ type: 'TICK', currentTime: 0, speed: 1 });
           break;
 
         case 'POSITIONS': {

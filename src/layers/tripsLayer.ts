@@ -34,9 +34,9 @@ export const createTripsLayer = (
     getTimestamps: (d) => d.path.map((p) => p.timestamp),
     getColor: (d) => {
       if (options.selectedId && options.selectedId !== d.vehicleId) {
-        return [0, 212, 255, 40] as [number, number, number, number];
+        return [0, 212, 255, 80] as [number, number, number, number];
       }
-      return [...TRAIL_COLOR, 200] as [number, number, number, number];
+      return [...TRAIL_COLOR, 230] as [number, number, number, number];
     },
     getWidth: (d) =>
       options.selectedId === d.vehicleId ? TRAIL_WIDTH_SELECTED : TRAIL_WIDTH,

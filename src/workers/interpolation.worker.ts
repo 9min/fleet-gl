@@ -165,9 +165,9 @@ const interpolateAll = (currentTime: number): ArrayBuffer => {
     else running++;
   }
 
-  // Emit stats every ~60 frames (~1 second)
+  // Emit stats on first frame and every ~60 frames (~1 second)
   frameCount++;
-  if (frameCount % 60 === 0) {
+  if (frameCount === 1 || frameCount % 60 === 0) {
     const totalWaypoints = vehicles.reduce((sum, v) => sum + v.totalWaypoints, 0);
     const completedWaypoints = vehicles.reduce((sum, _v, idx) => {
       const offset = idx * 5;

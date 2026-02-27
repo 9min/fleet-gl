@@ -8,4 +8,4 @@ export type SimulationStats = {
   totalDistance: number;
 };
 
-export type PlaybackSpeed = 1 | 2 | 4 | 8;
+export type PlaybackSpeed = 60 | 120 | 300 | 600;

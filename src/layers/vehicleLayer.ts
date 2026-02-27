@@ -1,9 +1,10 @@
-import { ScatterplotLayer } from '@deck.gl/layers';
+import { SimpleMeshLayer } from '@deck.gl/mesh-layers';
+
+import { createTruckMesh } from '@/utils/truckMesh';
 import type { VehiclePosition, VehicleStatus } from '@/types/vehicle';
 
-const VEHICLE_RADIUS = 80;
-const VEHICLE_RADIUS_MIN_PIXELS = 4;
-const VEHICLE_RADIUS_MAX_PIXELS = 20;
+// Generate mesh once at module level (never per-frame)
+const TRUCK_MESH = createTruckMesh();
 
 const STATUS_COLORS: Record<VehicleStatus, [number, number, number]> = {
   running: [0, 212, 255],
@@ -19,25 +20,24 @@ export const createVehicleLayer = (
     filters?: VehicleStatus[];
   } = {},
 ) => {
-  return new ScatterplotLayer<VehiclePosition>({
+  return new SimpleMeshLayer<VehiclePosition>({
     id: 'vehicle-layer',
     data,
-    getPosition: (d) => [d.lng, d.lat],
-    getRadius: (d) =>
-      options.selectedId === d.vehicleId ? VEHICLE_RADIUS * 1.5 : VEHICLE_RADIUS,
-    radiusMinPixels: VEHICLE_RADIUS_MIN_PIXELS,
-    radiusMaxPixels: VEHICLE_RADIUS_MAX_PIXELS,
-    getFillColor: (d) => {
+    mesh: TRUCK_MESH,
+    getPosition: (d) => [d.lng, d.lat, 0],
+    getOrientation: (d) => [0, -d.bearing, 0],
+    getColor: (d) => {
       const base = STATUS_COLORS[d.status] ?? STATUS_COLORS.running;
       if (options.selectedId && options.selectedId !== d.vehicleId) {
-        return [...base, 80] as [number, number, number, number];
+        return [...base, 200] as [number, number, number, number];
       }
       return [...base, 255] as [number, number, number, number];
     },
+    sizeScale: 100,
     pickable: true,
     updateTriggers: {
-      getRadius: [options.selectedId],
-      getFillColor: [options.selectedId, options.filters],
+      getColor: [options.selectedId, options.filters],
+      getOrientation: [data],
     },
   });
 };
