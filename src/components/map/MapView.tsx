@@ -6,6 +6,7 @@ import { MAP_CONFIG, ENTRY_ANIMATION } from '@/constants/map';
 import { getMapStyle } from '@/api/vworld/tileConfig';
 import { useUIStore } from '@/stores/uiStore';
 import { useSimulationStore } from '@/stores/simulationStore';
+import { useThemeStore } from '@/stores/themeStore';
 import DeckGLOverlay from './DeckGLOverlay';
 import VehicleTooltip from './VehicleTooltip';
 import type { PickingInfo } from '@deck.gl/core';
@@ -20,7 +21,8 @@ type MapViewProps = {
 
 const MapView = ({ layers, positions, ready }: MapViewProps) => {
   const mapRef = useRef<MapRef>(null);
-  const mapStyle = useMemo(() => getMapStyle(), []);
+  const resolvedTheme = useThemeStore((s) => s.resolvedTheme);
+  const mapStyle = useMemo(() => getMapStyle(resolvedTheme), [resolvedTheme]);
   const selectVehicle = useUIStore((s) => s.selectVehicle);
   const selectedVehicleId = useUIStore((s) => s.selectedVehicleId);
   const [hoverInfo, setHoverInfo] = useState<{

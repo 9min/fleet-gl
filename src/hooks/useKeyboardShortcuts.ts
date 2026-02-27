@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useSimulationStore } from '@/stores/simulationStore';
 import { useUIStore } from '@/stores/uiStore';
+import { useThemeStore } from '@/stores/themeStore';
 import type { PlaybackSpeed } from '@/types/simulation';
 
 type UseKeyboardShortcutsOptions = {
@@ -50,6 +51,18 @@ export const useKeyboardShortcuts = ({ seek }: UseKeyboardShortcutsOptions) => {
         case 'KeyP':
           if (!e.ctrlKey && !e.metaKey) {
             ui.togglePerformanceOverlay();
+          }
+          break;
+
+        case 'KeyT':
+          if (!e.ctrlKey && !e.metaKey) {
+            useThemeStore.getState().toggleTheme();
+          }
+          break;
+
+        case 'KeyA':
+          if (!e.ctrlKey && !e.metaKey) {
+            ui.toggleAnalyticsPanel();
           }
           break;
 

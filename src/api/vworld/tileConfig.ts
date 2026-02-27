@@ -359,6 +359,68 @@ const layers: maplibregl.LayerSpecification[] = [
   },
 ];
 
+// -- Light palette -----------------------------------------------------------
+const L = {
+  bg: '#E8ECF0',
+  water: '#B4D4E8',
+  waterway: '#9EC5DB',
+  land: '#F0F2F5',
+  landcoverGrass: '#D4E8D4',
+  landcoverWood: '#C8DCC8',
+  landuse: '#E6E9ED',
+  park: '#C8E0C8',
+  buildingFlat: '#D8DCE2',
+  buildingLow: '#CDD2D9',
+  buildingHigh: '#B8BFC8',
+  roadService: '#F5F5F5',
+  roadMinor: '#FFFFFF',
+  roadMajor: '#FFFFFF',
+  roadHighway: '#FDE68A',
+  roadHighwayCasing: '#F59E0B',
+  railway: '#D1D5DB',
+  boundary: '#9CA3AF',
+  aeroway: '#D1D5DB',
+  labelRoad: '#6B7280',
+  labelTown: '#4B5563',
+  labelCity: '#374151',
+  labelCountry: '#1F2937',
+} as const;
+
+// -- Light map layers --------------------------------------------------------
+const lightLayers: maplibregl.LayerSpecification[] = [
+  { id: 'background', type: 'background', paint: { 'background-color': L.bg } },
+  {
+    id: 'landcover', type: 'fill', source: 'openmaptiles', 'source-layer': 'landcover',
+    paint: { 'fill-color': ['match', ['get', 'class'], 'grass', L.landcoverGrass, 'wood', L.landcoverWood, L.land], 'fill-opacity': 0.6 },
+  },
+  { id: 'landuse', type: 'fill', source: 'openmaptiles', 'source-layer': 'landuse', paint: { 'fill-color': L.landuse, 'fill-opacity': 0.4 } },
+  { id: 'park', type: 'fill', source: 'openmaptiles', 'source-layer': 'park', paint: { 'fill-color': L.park, 'fill-opacity': 0.5 } },
+  { id: 'water', type: 'fill', source: 'openmaptiles', 'source-layer': 'water', paint: { 'fill-color': L.water } },
+  { id: 'waterway', type: 'line', source: 'openmaptiles', 'source-layer': 'waterway', paint: { 'line-color': L.waterway, 'line-width': ['interpolate', ['linear'], ['zoom'], 8, 0.5, 14, 2] } },
+  { id: 'building-2d', type: 'fill', source: 'openmaptiles', 'source-layer': 'building', maxzoom: 14, paint: { 'fill-color': L.buildingFlat, 'fill-opacity': 0.6 } },
+  { id: 'road-service', type: 'line', source: 'openmaptiles', 'source-layer': 'transportation', filter: ['in', ['get', 'class'], ['literal', ['service', 'track']]], paint: { 'line-color': L.roadService, 'line-width': ['interpolate', ['linear'], ['zoom'], 12, 0.5, 18, 3] } },
+  { id: 'road-minor', type: 'line', source: 'openmaptiles', 'source-layer': 'transportation', filter: ['in', ['get', 'class'], ['literal', ['minor', 'tertiary']]], paint: { 'line-color': L.roadMinor, 'line-width': ['interpolate', ['linear'], ['zoom'], 10, 0.5, 18, 6] } },
+  { id: 'road-major', type: 'line', source: 'openmaptiles', 'source-layer': 'transportation', filter: ['in', ['get', 'class'], ['literal', ['primary', 'secondary']]], paint: { 'line-color': L.roadMajor, 'line-width': ['interpolate', ['linear'], ['zoom'], 8, 0.8, 18, 10] } },
+  { id: 'road-highway-casing', type: 'line', source: 'openmaptiles', 'source-layer': 'transportation', filter: ['==', ['get', 'class'], 'motorway'], paint: { 'line-color': L.roadHighwayCasing, 'line-width': ['interpolate', ['linear'], ['zoom'], 6, 1.5, 18, 18], 'line-opacity': 0.3 } },
+  { id: 'road-highway', type: 'line', source: 'openmaptiles', 'source-layer': 'transportation', filter: ['==', ['get', 'class'], 'motorway'], paint: { 'line-color': L.roadHighway, 'line-width': ['interpolate', ['linear'], ['zoom'], 6, 0.8, 18, 12] } },
+  { id: 'railway', type: 'line', source: 'openmaptiles', 'source-layer': 'transportation', filter: ['==', ['get', 'class'], 'rail'], paint: { 'line-color': L.railway, 'line-width': 1, 'line-dasharray': [3, 3] } },
+  { id: 'boundary-admin', type: 'line', source: 'openmaptiles', 'source-layer': 'boundary', filter: ['<=', ['get', 'admin_level'], 4], paint: { 'line-color': L.boundary, 'line-width': 1, 'line-dasharray': [4, 2], 'line-opacity': 0.5 } },
+  { id: 'aeroway', type: 'line', source: 'openmaptiles', 'source-layer': 'aeroway', paint: { 'line-color': L.aeroway, 'line-width': ['interpolate', ['linear'], ['zoom'], 10, 1, 16, 6] } },
+  {
+    id: 'building-3d', type: 'fill-extrusion', source: 'openmaptiles', 'source-layer': 'building', minzoom: 14,
+    paint: {
+      'fill-extrusion-color': ['interpolate', ['linear'], ['coalesce', ['get', 'render_height'], 12], 0, L.buildingLow, 40, L.buildingHigh],
+      'fill-extrusion-height': ['coalesce', ['get', 'render_height'], 12],
+      'fill-extrusion-base': ['coalesce', ['get', 'render_min_height'], 0],
+      'fill-extrusion-opacity': ['interpolate', ['linear'], ['zoom'], 14, 0, 14.5, 0.5, 16, 0.6],
+    },
+  },
+  { id: 'label-road', type: 'symbol', source: 'openmaptiles', 'source-layer': 'transportation_name', minzoom: 15, layout: { 'text-field': nameExpr, 'text-font': ['Noto Sans Regular'], 'text-size': 11, 'symbol-placement': 'line', 'text-rotation-alignment': 'map', 'text-max-angle': 30 }, paint: { 'text-color': L.labelRoad, 'text-halo-color': '#FFFFFF', 'text-halo-width': 1.5 } },
+  { id: 'label-place-town', type: 'symbol', source: 'openmaptiles', 'source-layer': 'place', filter: ['in', ['get', 'class'], ['literal', ['town', 'village', 'suburb', 'neighbourhood']]], minzoom: 12, layout: { 'text-field': nameExpr, 'text-font': ['Noto Sans Regular'], 'text-size': ['interpolate', ['linear'], ['zoom'], 12, 10, 16, 14] }, paint: { 'text-color': L.labelTown, 'text-halo-color': '#FFFFFF', 'text-halo-width': 1.5 } },
+  { id: 'label-place-city', type: 'symbol', source: 'openmaptiles', 'source-layer': 'place', filter: ['==', ['get', 'class'], 'city'], minzoom: 6, layout: { 'text-field': nameExpr, 'text-font': ['Noto Sans Bold'], 'text-size': ['interpolate', ['linear'], ['zoom'], 6, 12, 14, 20] }, paint: { 'text-color': L.labelCity, 'text-halo-color': '#FFFFFF', 'text-halo-width': 2 } },
+  { id: 'label-country', type: 'symbol', source: 'openmaptiles', 'source-layer': 'place', filter: ['==', ['get', 'class'], 'country'], layout: { 'text-field': nameExpr, 'text-font': ['Noto Sans Bold'], 'text-size': 14 }, paint: { 'text-color': L.labelCountry, 'text-halo-color': '#FFFFFF', 'text-halo-width': 2 } },
+];
+
 // -- Style builders ----------------------------------------------------------
 
 const createDarkVectorStyle = (): maplibregl.StyleSpecification => ({
@@ -370,6 +432,19 @@ const createDarkVectorStyle = (): maplibregl.StyleSpecification => ({
     anchor: 'viewport',
     color: '#ffffff',
     intensity: 0.2,
+    position: [1.5, 90, 80],
+  },
+});
+
+const createLightVectorStyle = (): maplibregl.StyleSpecification => ({
+  version: 8,
+  sources: VECTOR_SOURCE,
+  glyphs: GLYPHS,
+  layers: lightLayers,
+  light: {
+    anchor: 'viewport',
+    color: '#ffffff',
+    intensity: 0.4,
     position: [1.5, 90, 80],
   },
 });
@@ -401,12 +476,12 @@ const createRasterFallbackStyle = (
   ],
 });
 
-// -- Public API (interface unchanged) ----------------------------------------
+// -- Public API --------------------------------------------------------------
 
-export const getMapStyle = (): maplibregl.StyleSpecification => {
+export const getMapStyle = (theme: 'dark' | 'light' = 'dark'): maplibregl.StyleSpecification => {
   const vworldKey = import.meta.env.VITE_VWORLD_API_KEY as string | undefined;
   if (vworldKey) {
     return createRasterFallbackStyle(vworldKey);
   }
-  return createDarkVectorStyle();
+  return theme === 'light' ? createLightVectorStyle() : createDarkVectorStyle();
 };
