@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg-dark: #0F1923;
+  --color-bg-card: #1A2332;
+  --color-accent-cyan: #00D4FF;
+  --color-accent-green: #00FF88;
+  --color-accent-amber: #FFB800;
+  --color-accent-red: #FF4757;
+  --color-text-primary: #E8ECF1;
+  --color-text-secondary: #8892A0;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--color-bg-dark);
+  color: var(--color-text-primary);
+}
+
+/* Glass panel utility */
+.glass-panel {
+  background: color-mix(in srgb, var(--color-bg-card) 80%, transparent);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+}
+
+/* Timeline slider */
+.timeline-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+}
+
+.timeline-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-accent-cyan);
+  box-shadow: 0 0 8px rgba(0, 212, 255, 0.5);
+  cursor: pointer;
+  position: relative;
+  z-index: 2;
+}
+
+.timeline-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-accent-cyan);
+  box-shadow: 0 0 8px rgba(0, 212, 255, 0.5);
+  cursor: pointer;
+  border: none;
+}
