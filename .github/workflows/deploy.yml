@@ -26,10 +26,14 @@ jobs:
       - name: TypeScript type check
         run: npm run type-check
 
+      - name: ESLint
+        run: npm run lint
+
+      - name: Test
+        run: npm run test
+
       - name: Build
         run: npm run build
-        env:
-          VITE_VWORLD_API_KEY: ${{ secrets.VITE_VWORLD_API_KEY }}
 
       - name: Deploy to Vercel
         uses: amondnet/vercel-action@v25

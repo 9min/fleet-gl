@@ -31,7 +31,8 @@ jobs:
       - name: ESLint
         run: npm run lint
 
+      - name: Test
+        run: npm run test
+
       - name: Build
         run: npm run build
-        env:
-          VITE_VWORLD_API_KEY: ${{ secrets.VITE_VWORLD_API_KEY || 'CI_PLACEHOLDER' }}
