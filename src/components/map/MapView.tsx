@@ -19,6 +19,14 @@ type MapViewProps = {
   ready: boolean;
 };
 
+// Auto-fit: smoothly track the fleet bounding box
+const AUTO_FIT_INTERVAL = 2000;
+const FIT_PADDING = { top: 100, bottom: 80, left: 80, right: 340 }; // right accounts for sidebar
+const FIT_DURATION = 1800;
+// Only refit when vehicle bbox vs viewport ratio drifts beyond these thresholds
+const ZOOM_OUT_RATIO = 0.20; // >20% of vehicles outside → zoom out
+const ZOOM_IN_RATIO = 0.30;  // viewport is >30% wider than bbox on each axis → zoom in
+
 const MapView = ({ layers, positions, ready }: MapViewProps) => {
   const mapRef = useRef<MapRef>(null);
   const resolvedTheme = useThemeStore((s) => s.resolvedTheme);
@@ -30,28 +38,107 @@ const MapView = ({ layers, positions, ready }: MapViewProps) => {
     y: number;
     vehicle: VehiclePosition;
   } | null>(null);
+  const entryDoneRef = useRef(false);
+  const userInteractedRef = useRef(false);
+  const positionsRef = useRef(positions);
+  positionsRef.current = positions;
 
-  // Cinematic entry animation
-  useEffect(() => {
-    if (!ready) return;
+  // Cinematic entry animation — triggered on map load
+  const handleMapLoad = useCallback(() => {
     const map = mapRef.current?.getMap();
     if (!map) return;
 
-    map.easeTo({
+    map.flyTo({
+      center: MAP_CONFIG.center as [number, number],
       zoom: MAP_CONFIG.zoom,
       pitch: MAP_CONFIG.pitch,
       bearing: MAP_CONFIG.bearing,
       duration: ENTRY_ANIMATION.duration,
-      easing: (t: number) => 1 - Math.pow(1 - t, 3),
+      essential: true,
     });
 
     // Auto-play after camera animation
-    const timer = setTimeout(() => {
+    setTimeout(() => {
+      entryDoneRef.current = true;
       useSimulationStore.getState().play();
     }, ENTRY_ANIMATION.duration + ENTRY_ANIMATION.autoPlayDelay);
+  }, []);
 
-    return () => clearTimeout(timer);
+  // Track user manual interaction to pause auto-fit
+  useEffect(() => {
+    const map = mapRef.current?.getMap();
+    if (!map) return;
+    const onInteract = () => { userInteractedRef.current = true; };
+    const onInteractEnd = () => {
+      // Resume auto-fit after 10s of no interaction
+      setTimeout(() => { userInteractedRef.current = false; }, 10000);
+    };
+    map.on('dragstart', onInteract);
+    map.on('zoomstart', onInteract);
+    map.on('dragend', onInteractEnd);
+    map.on('zoomend', onInteractEnd);
+    return () => {
+      map.off('dragstart', onInteract);
+      map.off('zoomstart', onInteract);
+      map.off('dragend', onInteractEnd);
+      map.off('zoomend', onInteractEnd);
+    };
   }, [ready]);
+
+  // Auto-fit: zoom in/out to keep all running vehicles visible
+  useEffect(() => {
+    if (!ready) return;
+    const interval = setInterval(() => {
+      if (!entryDoneRef.current || userInteractedRef.current) return;
+      if (selectedVehicleId) return;
+      const map = mapRef.current?.getMap();
+      if (!map || map.isMoving()) return;
+
+      const cur = positionsRef.current;
+      const active = cur.filter((p) => p.status === 'running' || p.status === 'idle');
+      if (active.length < 2) return;
+
+      // Compute vehicle bounding box
+      let minLng = Infinity, maxLng = -Infinity, minLat = Infinity, maxLat = -Infinity;
+      for (const p of active) {
+        if (p.lng < minLng) minLng = p.lng;
+        if (p.lng > maxLng) maxLng = p.lng;
+        if (p.lat < minLat) minLat = p.lat;
+        if (p.lat > maxLat) maxLat = p.lat;
+      }
+
+      const vBounds = map.getBounds();
+      const vW = vBounds.getEast() - vBounds.getWest();
+      const vH = vBounds.getNorth() - vBounds.getSouth();
+      const bW = maxLng - minLng;
+      const bH = maxLat - minLat;
+
+      // Check if vehicles are outside viewport → need zoom out
+      const outside = active.filter(
+        (p) => p.lng < vBounds.getWest() || p.lng > vBounds.getEast() ||
+               p.lat < vBounds.getSouth() || p.lat > vBounds.getNorth(),
+      );
+      const needZoomOut = outside.length / active.length > ZOOM_OUT_RATIO;
+
+      // Check if viewport is much wider than vehicle spread → can zoom in
+      const needZoomIn = vW > 0 && vH > 0 && bW > 0 && bH > 0 &&
+        (bW / vW < (1 - ZOOM_IN_RATIO)) && (bH / vH < (1 - ZOOM_IN_RATIO));
+
+      if (needZoomOut || needZoomIn) {
+        map.fitBounds(
+          [[minLng, minLat], [maxLng, maxLat]],
+          {
+            padding: FIT_PADDING,
+            pitch: MAP_CONFIG.pitch,
+            bearing: MAP_CONFIG.bearing,
+            duration: FIT_DURATION,
+            maxZoom: MAP_CONFIG.zoom,
+          },
+        );
+      }
+    }, AUTO_FIT_INTERVAL);
+    return () => clearInterval(interval);
+  }, [ready, selectedVehicleId]); // positions accessed via ref — no dep needed
 
   // Fly-to selected vehicle
   useEffect(() => {
@@ -91,14 +178,15 @@ const MapView = ({ layers, positions, ready }: MapViewProps) => {
     <Map
       ref={mapRef}
       initialViewState={{
-        longitude: MAP_CONFIG.center[0],
-        latitude: MAP_CONFIG.center[1],
+        longitude: ENTRY_ANIMATION.startCenter[0],
+        latitude: ENTRY_ANIMATION.startCenter[1],
         zoom: ENTRY_ANIMATION.startZoom,
         pitch: ENTRY_ANIMATION.startPitch,
         bearing: ENTRY_ANIMATION.startBearing,
       }}
       style={{ width: '100%', height: '100%' }}
       mapStyle={mapStyle}
+      onLoad={handleMapLoad}
     >
       <DeckGLOverlay layers={layers} onClick={handleClick} onHover={handleHover} />
       {hoverInfo && (
