@@ -238,18 +238,20 @@ src/components/ → 모든 내부 모듈 import 가능
 
 | 변수 | 접두사 | 용도 | 클라이언트 노출 |
 |---|---|---|---|
-| `VITE_VWORLD_API_KEY` | `VITE_` | V-World API 키 | O (필수) |
-| `KAKAO_REST_API_KEY` | 없음 | 경로 추출 스크립트 | X |
+| `VITE_VWORLD_API_KEY` | `VITE_` | V-World 위성 타일 (선택사항, 미설정 시 OpenFreeMap 벡터 타일 사용) | O |
+| `KAKAO_REST_API_KEY` | 없음 | 경로 추출 스크립트 전용 (빌드 타임만 사용) | X |
 
 ---
 
 ## 빌드/실행 명령어
 
 ```bash
-npm run dev            # 개발 서버
-npm run build          # 프로덕션 빌드
+npm run dev            # 개발 서버 (localhost:5173)
+npm run build          # 프로덕션 빌드 (tsc + vite build)
 npm run preview        # 빌드 미리보기
 npm run lint           # ESLint
-npm run type-check     # TypeScript 검사
-npm run extract-routes # 경로 데이터 추출
+npm run type-check     # TypeScript 타입 검사
+npm run test           # Vitest 테스트 실행
+npm run test:watch     # Vitest watch 모드
+npm run extract-routes # 카카오 API로 실제 경로 데이터 추출
 ```
