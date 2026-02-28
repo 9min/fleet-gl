@@ -247,7 +247,7 @@ src/components/ → 모든 내부 모듈 import 가능
 
 ```bash
 npm run dev            # 개발 서버 (localhost:5173)
-npm run build          # 프로덕션 빌드 (tsc + vite build)
+npm run build          # 프로덕션 빌드 (tsc -b && vite build)
 npm run preview        # 빌드 미리보기
 npm run lint           # ESLint
 npm run type-check     # TypeScript 타입 검사
