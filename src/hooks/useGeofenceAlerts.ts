@@ -35,7 +35,8 @@ export const useGeofenceAlerts = (
 
       // Check only a subset each tick for performance (25 vehicles at a time)
       const checkCount = Math.min(positions.length, 25);
-      const startIdx = Math.floor(Math.random() * Math.max(1, positions.length - checkCount));
+      const maxStartIdx = Math.max(0, positions.length - checkCount);
+      const startIdx = Math.floor(Math.random() * (maxStartIdx + 1));
 
       for (let vi = startIdx; vi < startIdx + checkCount && vi < positions.length; vi++) {
         const v = positions[vi]!;

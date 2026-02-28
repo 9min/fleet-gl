@@ -14,11 +14,17 @@ export const useAnalytics = () => {
       const { isPlaying, currentTime, stats } = useSimulationStore.getState();
       if (!isPlaying) return;
 
+      // Handle backward time jumps (seek/reset)
+      if (currentTime < lastSampleTimeRef.current) {
+        lastSampleTimeRef.current = currentTime - SIM_SAMPLE_INTERVAL;
+      }
       if (currentTime - lastSampleTimeRef.current < SIM_SAMPLE_INTERVAL) return;
-      lastSampleTimeRef.current = currentTime;
 
       const positions = getPositions();
       if (positions.length === 0) return;
+
+      // Only advance sample time after data is confirmed valid
+      lastSampleTimeRef.current = currentTime;
 
       const { addTimeSeriesPoint, setVehicleMetrics } = useAnalyticsStore.getState();
 
