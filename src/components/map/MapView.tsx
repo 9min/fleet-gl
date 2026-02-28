@@ -82,8 +82,9 @@ const MapView = ({ ready }: MapViewProps) => {
       userInteractedRef.current = true;
     };
 
-    const onInteractEnd = (e: { originalEvent?: unknown }) => {
-      if (!isUserGesture(e)) return;
+    const onInteractEnd = () => {
+      // Only schedule resume if user actually interacted
+      if (!userInteractedRef.current) return;
       // Clear previous timeout to prevent accumulation
       if (interactionTimeout !== null) {
         clearTimeout(interactionTimeout);
