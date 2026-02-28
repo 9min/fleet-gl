@@ -4,10 +4,15 @@ import type { SimulationStats } from '@/types/simulation';
 
 // Mock DOM APIs used by downloadCsv
 const mockClick = vi.fn();
-const mockCreateObjectURL = vi.fn(() => 'blob:mock-url');
+const mockCreateObjectURL = vi.fn((blob: Blob) => {
+  capturedBlob = blob;
+  return 'blob:mock-url';
+});
 const mockRevokeObjectURL = vi.fn();
 
 let capturedBlob: Blob | null = null;
+
+const originalCreateElement = document.createElement.bind(document);
 
 beforeAll(() => {
   globalThis.URL.createObjectURL = mockCreateObjectURL;
@@ -20,13 +25,7 @@ beforeAll(() => {
         click: mockClick,
       } as unknown as HTMLAnchorElement;
     }
-    return document.createElement(tag);
-  });
-
-  // Capture the Blob passed to createObjectURL
-  mockCreateObjectURL.mockImplementation((blob: Blob) => {
-    capturedBlob = blob;
-    return 'blob:mock-url';
+    return originalCreateElement(tag);
   });
 });
 
