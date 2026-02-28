@@ -124,7 +124,13 @@ const MapView = ({ layers, positions, ready }: MapViewProps) => {
       const active = cur.filter((p) => p.status === 'running' || p.status === 'idle');
       if (active.length < 2) return;
 
-      // Compute vehicle bounding box
+      const canvas = map.getCanvas();
+      const effectiveW = canvas.clientWidth - fitPadding.left - fitPadding.right;
+      const effectiveH = canvas.clientHeight - fitPadding.top - fitPadding.bottom;
+      const effectiveCenterX = fitPadding.left + effectiveW / 2;
+      const effectiveCenterY = fitPadding.top + effectiveH / 2;
+
+      // Compute vehicle bounding box (actual distribution, not symmetric)
       let minLng = Infinity, maxLng = -Infinity, minLat = Infinity, maxLat = -Infinity;
       for (const p of active) {
         if (p.lng < minLng) minLng = p.lng;
@@ -132,45 +138,49 @@ const MapView = ({ layers, positions, ready }: MapViewProps) => {
         if (p.lat < minLat) minLat = p.lat;
         if (p.lat > maxLat) maxLat = p.lat;
       }
-
-      const vBounds = map.getBounds();
       const bW = maxLng - minLng;
       const bH = maxLat - minLat;
 
+      // Early state: vehicles clustered at origin → panBy to correct entry animation centering
+      if (bW < 0.001 && bH < 0.001) {
+        const clusterPx = map.project([minLng, minLat]);
+        const offsetX = clusterPx.x - effectiveCenterX;
+        const offsetY = clusterPx.y - effectiveCenterY;
+        if (Math.abs(offsetX) > 30 || Math.abs(offsetY) > 30) {
+          map.panBy([offsetX, offsetY], { duration: 1000 });
+        }
+        return;
+      }
+
       // Count vehicles outside visible bounds → need zoom out
+      const vBounds = map.getBounds();
       const outside = active.filter(
         (p) => p.lng < vBounds.getWest() || p.lng > vBounds.getEast() ||
                p.lat < vBounds.getSouth() || p.lat > vBounds.getNorth(),
       );
       const needZoomOut = outside.length / active.length > ZOOM_OUT_RATIO;
 
-      // Project bbox to screen pixels for accurate size comparison (handles pitch distortion)
+      // Project actual vehicle bbox to screen pixels (handles pitch distortion)
       const topLeftPx = map.project([minLng, maxLat]);
       const bottomRightPx = map.project([maxLng, minLat]);
       const bboxPxW = Math.abs(bottomRightPx.x - topLeftPx.x);
       const bboxPxH = Math.abs(bottomRightPx.y - topLeftPx.y);
-      const canvas = map.getCanvas();
-      const effectiveW = canvas.clientWidth - fitPadding.left - fitPadding.right;
-      const effectiveH = canvas.clientHeight - fitPadding.top - fitPadding.bottom;
 
-      // Zoom in only if bbox is tiny relative to the effective (padding-adjusted) viewport
+      // Zoom in only if bbox is tiny relative to the effective viewport
       const needZoomIn = effectiveW > 0 && effectiveH > 0 && bboxPxW > 0 && bboxPxH > 0 &&
         bboxPxW < effectiveW * (1 - ZOOM_IN_RATIO) && bboxPxH < effectiveH * (1 - ZOOM_IN_RATIO);
 
-      // Zoom out if bbox exceeds effective viewport (vehicles spreading beyond padding area)
+      // Zoom out if bbox exceeds effective viewport
       const bboxExceedsViewport = bboxPxW > effectiveW * 1.2 || bboxPxH > effectiveH * 1.2;
 
-      // Recenter if bbox center has drifted significantly from screen center
+      // Recenter if bbox center has drifted from effective viewport center
       const bboxCenterPx = map.project([(minLng + maxLng) / 2, (minLat + maxLat) / 2]);
-      const screenCenterX = canvas.clientWidth / 2;
-      const screenCenterY = canvas.clientHeight / 2;
-      const driftX = Math.abs(bboxCenterPx.x - screenCenterX) / canvas.clientWidth;
-      const driftY = Math.abs(bboxCenterPx.y - screenCenterY) / canvas.clientHeight;
-      const needRecenter = driftX > 0.20 || driftY > 0.20;
+      const driftX = Math.abs(bboxCenterPx.x - effectiveCenterX) / effectiveW;
+      const driftY = Math.abs(bboxCenterPx.y - effectiveCenterY) / effectiveH;
+      const needRecenter = driftX > 0.15 || driftY > 0.15;
 
       if (needZoomOut || needZoomIn || needRecenter || bboxExceedsViewport) {
         // Skip if bbox hasn't changed meaningfully since last fitBounds
-        // (prevents repeated fitBounds to the same target, e.g. when padding makes needZoomIn always true)
         const last = lastFitRef.current;
         const bboxChanged = !last ||
           Math.abs(minLng - last[0]) > bW * 0.05 || Math.abs(minLat - last[1]) > bH * 0.05 ||
@@ -188,6 +198,25 @@ const MapView = ({ layers, positions, ready }: MapViewProps) => {
               maxZoom: MAP_CONFIG.zoom,
             },
           );
+
+          // Correct pitch-induced center offset after fitBounds animation completes
+          // fitBounds with pitch>0 doesn't perfectly center the bbox in the padded viewport
+          const snapMinLng = minLng, snapMaxLng = maxLng;
+          const snapMinLat = minLat, snapMaxLat = maxLat;
+          map.once('moveend', () => {
+            if (userInteractedRef.current) return;
+            const postCenter = map.project([
+              (snapMinLng + snapMaxLng) / 2,
+              (snapMinLat + snapMaxLat) / 2,
+            ]);
+            const cx = fitPadding.left + (map.getCanvas().clientWidth - fitPadding.left - fitPadding.right) / 2;
+            const cy = fitPadding.top + (map.getCanvas().clientHeight - fitPadding.top - fitPadding.bottom) / 2;
+            const dx = postCenter.x - cx;
+            const dy = postCenter.y - cy;
+            if (Math.abs(dx) > 15 || Math.abs(dy) > 15) {
+              map.panBy([dx, dy], { duration: 600 });
+            }
+          });
         }
       }
     }, AUTO_FIT_INTERVAL);
