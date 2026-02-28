@@ -1,21 +1,23 @@
+import { useTranslation } from 'react-i18next';
 import { useUIStore } from '@/stores/uiStore';
 
-const SHORTCUTS = [
-  { keys: ['Space'], description: 'Play / Pause' },
-  { keys: ['←'], description: 'Seek backward 5 min' },
-  { keys: ['→'], description: 'Seek forward 5 min' },
-  { keys: ['1'], description: 'Speed ×1 (60s/s)' },
-  { keys: ['2'], description: 'Speed ×2 (120s/s)' },
-  { keys: ['3'], description: 'Speed ×5 (300s/s)' },
-  { keys: ['4'], description: 'Speed ×10 (600s/s)' },
-  { keys: ['T'], description: 'Toggle dark/light theme' },
-  { keys: ['A'], description: 'Toggle analytics panel' },
-  { keys: ['P'], description: 'Toggle FPS overlay' },
-  { keys: ['Esc'], description: 'Deselect / Close' },
-  { keys: ['?'], description: 'Toggle this guide' },
+const SHORTCUT_KEYS: { keys: string[]; tKey: string }[] = [
+  { keys: ['Space'], tKey: 'shortcuts.playPause' },
+  { keys: ['←'], tKey: 'shortcuts.seekBackward' },
+  { keys: ['→'], tKey: 'shortcuts.seekForward' },
+  { keys: ['1'], tKey: 'shortcuts.speed1' },
+  { keys: ['2'], tKey: 'shortcuts.speed2' },
+  { keys: ['3'], tKey: 'shortcuts.speed3' },
+  { keys: ['4'], tKey: 'shortcuts.speed4' },
+  { keys: ['T'], tKey: 'shortcuts.toggleTheme' },
+  { keys: ['A'], tKey: 'shortcuts.toggleAnalytics' },
+  { keys: ['P'], tKey: 'shortcuts.toggleFPS' },
+  { keys: ['Esc'], tKey: 'shortcuts.deselect' },
+  { keys: ['?'], tKey: 'shortcuts.toggleGuide' },
 ];
 
 const ShortcutGuide = () => {
+  const { t } = useTranslation();
   const isOpen = useUIStore((s) => s.isShortcutGuideOpen);
   const toggle = useUIStore((s) => s.toggleShortcutGuide);
 
@@ -31,7 +33,7 @@ const ShortcutGuide = () => {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-bold text-text-primary">Keyboard Shortcuts</h2>
+          <h2 className="text-base font-bold text-text-primary">{t('shortcuts.title')}</h2>
           <button
             onClick={toggle}
             className="text-text-secondary hover:text-text-primary transition-colors text-lg leading-none"
@@ -41,9 +43,9 @@ const ShortcutGuide = () => {
         </div>
 
         <div className="flex flex-col gap-2">
-          {SHORTCUTS.map((s) => (
-            <div key={s.description} className="flex items-center justify-between py-1">
-              <span className="text-sm text-text-secondary">{s.description}</span>
+          {SHORTCUT_KEYS.map((s) => (
+            <div key={s.tKey} className="flex items-center justify-between py-1">
+              <span className="text-sm text-text-secondary">{t(s.tKey)}</span>
               <div className="flex gap-1">
                 {s.keys.map((key) => (
                   <kbd

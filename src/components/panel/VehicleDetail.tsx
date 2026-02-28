@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useUIStore } from '@/stores/uiStore';
 import { useSimulationStore } from '@/stores/simulationStore';
 import RouteProgress from './RouteProgress';
@@ -11,11 +12,11 @@ type VehicleDetailProps = {
   routes: VehicleRoute[];
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  running: 'Running',
-  idle: 'Idle',
-  completed: 'Completed',
-  delayed: 'Delayed',
+const STATUS_KEYS: Record<string, string> = {
+  running: 'status.running',
+  idle: 'status.idle',
+  completed: 'status.completed',
+  delayed: 'status.delayed',
 };
 
 const STATUS_DOT_COLORS: Record<string, string> = {
@@ -26,6 +27,7 @@ const STATUS_DOT_COLORS: Record<string, string> = {
 };
 
 const VehicleDetail = ({ positions, routes }: VehicleDetailProps) => {
+  const { t } = useTranslation();
   const selectedVehicleId = useUIStore((s) => s.selectedVehicleId);
   const selectVehicle = useUIStore((s) => s.selectVehicle);
   const currentTime = useSimulationStore((s) => s.currentTime);
@@ -83,26 +85,26 @@ const VehicleDetail = ({ positions, routes }: VehicleDetailProps) => {
             className="w-2 h-2 rounded-full"
             style={{ backgroundColor: STATUS_DOT_COLORS[vehicle.status] }}
           />
-          <span className="text-text-secondary">Status:</span>
-          <span className="text-text-primary">{STATUS_LABELS[vehicle.status]}</span>
+          <span className="text-text-secondary">{t('vehicle.status')}</span>
+          <span className="text-text-primary">{t(STATUS_KEYS[vehicle.status] ?? 'status.running')}</span>
         </div>
 
         <div className="flex justify-between">
-          <span className="text-text-secondary">Waypoint</span>
+          <span className="text-text-secondary">{t('vehicle.waypoint')}</span>
           <span className="font-mono text-text-primary">
             {vehicle.waypointIndex} / {vehicle.totalWaypoints}
           </span>
         </div>
 
         <div className="flex justify-between">
-          <span className="text-text-secondary">Position</span>
+          <span className="text-text-secondary">{t('vehicle.position')}</span>
           <span className="font-mono text-text-primary text-xs">
             {vehicle.lng.toFixed(4)}, {vehicle.lat.toFixed(4)}
           </span>
         </div>
 
         <div className="flex justify-between">
-          <span className="text-text-secondary">Bearing</span>
+          <span className="text-text-secondary">{t('vehicle.bearing')}</span>
           <span className="font-mono text-text-primary">{Math.round(vehicle.bearing)}&deg;</span>
         </div>
 
@@ -125,7 +127,7 @@ const VehicleDetail = ({ positions, routes }: VehicleDetailProps) => {
       {waypointProgress.length > 0 && (
         <div className="border-t border-white/10 pt-3">
           <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">
-            Route Progress
+            {t('vehicle.routeProgress')}
           </h3>
           <RouteProgress waypoints={waypointProgress} />
         </div>

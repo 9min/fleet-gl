@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { VehiclePosition } from '@/types/vehicle';
 
 type VehicleTooltipProps = {
@@ -6,11 +7,11 @@ type VehicleTooltipProps = {
   vehicle: VehiclePosition;
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  running: 'Running',
-  idle: 'Idle',
-  completed: 'Completed',
-  delayed: 'Delayed',
+const STATUS_KEYS: Record<string, string> = {
+  running: 'status.running',
+  idle: 'status.idle',
+  completed: 'status.completed',
+  delayed: 'status.delayed',
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -21,6 +22,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const VehicleTooltip = ({ x, y, vehicle }: VehicleTooltipProps) => {
+  const { t } = useTranslation();
   const progress = vehicle.totalWaypoints > 0
     ? Math.round((vehicle.waypointIndex / vehicle.totalWaypoints) * 100)
     : 0;
@@ -42,13 +44,13 @@ const VehicleTooltip = ({ x, y, vehicle }: VehicleTooltipProps) => {
         </div>
         <div className="flex flex-col gap-1 text-[11px]">
           <div className="flex justify-between">
-            <span className="text-text-secondary">Status</span>
+            <span className="text-text-secondary">{t('tooltip.status')}</span>
             <span style={{ color: STATUS_COLORS[vehicle.status] }}>
-              {STATUS_LABELS[vehicle.status]}
+              {t(STATUS_KEYS[vehicle.status] ?? 'status.running')}
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-text-secondary">Progress</span>
+            <span className="text-text-secondary">{t('tooltip.progress')}</span>
             <span className="text-text-primary font-mono">
               {vehicle.waypointIndex}/{vehicle.totalWaypoints} ({progress}%)
             </span>
