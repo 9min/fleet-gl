@@ -37,8 +37,12 @@ const MapView = ({ ready }: MapViewProps) => {
     vehicle: VehiclePosition;
   } | null>(null);
   const entryDoneRef = useRef(false);
-  const userInteractedRef = useRef(false);
-  const lastFitRef = useRef<[number, number, number, number] | null>(null); // [minLng, minLat, maxLng, maxLat]
+  const lastFitRef = useRef<[number, number, number, number] | null>(null);
+  const [mapLoaded, setMapLoaded] = useState(false);
+
+  // Timestamp-based interaction tracking (no timer/ref race conditions)
+  const lastUserInteractionRef = useRef(0);
+  const isUserIdle = () => Date.now() - lastUserInteractionRef.current >= AUTO_FIT_RESUME_DELAY;
 
   // Register overlay instance for direct Deck.gl updates
   const handleOverlayReady = useCallback((overlay: import('@deck.gl/mapbox').MapboxOverlay) => {
@@ -47,6 +51,7 @@ const MapView = ({ ready }: MapViewProps) => {
 
   // Cinematic entry animation — triggered on map load
   const handleMapLoad = useCallback(() => {
+    setMapLoaded(true);
     const map = mapRef.current?.getMap();
     if (!map) return;
 
@@ -66,61 +71,55 @@ const MapView = ({ ready }: MapViewProps) => {
     }, ENTRY_ANIMATION.duration + ENTRY_ANIMATION.autoPlayDelay);
   }, []);
 
-  // Track user manual interaction to pause auto-fit
-  // Uses originalEvent to distinguish user gestures from programmatic moves (fitBounds/flyTo)
+  // Track user interaction via timestamps — registered after map loads
   useEffect(() => {
+    if (!mapLoaded) return;
     const map = mapRef.current?.getMap();
     if (!map) return;
 
-    let interactionTimeout: number | null = null;
-
-    // MapLibre events include originalEvent only for user-initiated gestures
     const isUserGesture = (e: { originalEvent?: unknown }) => !!e.originalEvent;
 
-    const onInteract = (e: { originalEvent?: unknown }) => {
+    const onInteractStart = (e: { originalEvent?: unknown }) => {
       if (!isUserGesture(e)) return;
-      userInteractedRef.current = true;
+      lastUserInteractionRef.current = Date.now();
       // Cancel any in-progress programmatic animation (fitBounds/panBy)
-      // so it doesn't fight with the user's gesture
       map.stop();
     };
 
-    const onInteractEnd = () => {
-      // Only schedule resume if user actually interacted
-      if (!userInteractedRef.current) return;
-      // Clear previous timeout to prevent accumulation
-      if (interactionTimeout !== null) {
-        clearTimeout(interactionTimeout);
-      }
-      interactionTimeout = window.setTimeout(() => {
-        userInteractedRef.current = false;
-      }, AUTO_FIT_RESUME_DELAY);
+    const onInteractEnd = (e: { originalEvent?: unknown }) => {
+      if (!isUserGesture(e)) return;
+      lastUserInteractionRef.current = Date.now();
     };
 
-    map.on('dragstart', onInteract);
-    map.on('zoomstart', onInteract);
+    map.on('dragstart', onInteractStart);
+    map.on('zoomstart', onInteractStart);
+    map.on('pitchstart', onInteractStart);
+    map.on('rotatestart', onInteractStart);
     map.on('dragend', onInteractEnd);
     map.on('zoomend', onInteractEnd);
+    map.on('pitchend', onInteractEnd);
+    map.on('rotateend', onInteractEnd);
 
     return () => {
-      map.off('dragstart', onInteract);
-      map.off('zoomstart', onInteract);
+      map.off('dragstart', onInteractStart);
+      map.off('zoomstart', onInteractStart);
+      map.off('pitchstart', onInteractStart);
+      map.off('rotatestart', onInteractStart);
       map.off('dragend', onInteractEnd);
       map.off('zoomend', onInteractEnd);
-      if (interactionTimeout !== null) {
-        clearTimeout(interactionTimeout);
-      }
+      map.off('pitchend', onInteractEnd);
+      map.off('rotateend', onInteractEnd);
     };
-  }, [ready]);
+  }, [mapLoaded]);
 
   // Responsive padding based on screen size
   const fitPadding = isMobile ? FIT_PADDING_MOBILE : FIT_PADDING_DESKTOP;
 
   // Auto-fit: zoom in/out to keep all running vehicles visible
   useEffect(() => {
-    if (!ready) return;
+    if (!ready || !mapLoaded) return;
     const interval = setInterval(() => {
-      if (!entryDoneRef.current || userInteractedRef.current) return;
+      if (!entryDoneRef.current || !isUserIdle()) return;
       if (selectedVehicleId) return;
       const map = mapRef.current?.getMap();
       if (!map || map.isMoving()) return;
@@ -216,11 +215,10 @@ const MapView = ({ ready }: MapViewProps) => {
           );
 
           // Correct pitch-induced center offset after fitBounds animation completes
-          // fitBounds with pitch>0 doesn't perfectly center the bbox in the padded viewport
           const snapMinLng = minLng, snapMaxLng = maxLng;
           const snapMinLat = minLat, snapMaxLat = maxLat;
           map.once('moveend', () => {
-            if (userInteractedRef.current) return;
+            if (!isUserIdle()) return;
             const postCorners = [
               map.project([snapMinLng, snapMinLat]),
               map.project([snapMinLng, snapMaxLat]),
@@ -248,7 +246,7 @@ const MapView = ({ ready }: MapViewProps) => {
       }
     }, AUTO_FIT_INTERVAL);
     return () => clearInterval(interval);
-  }, [ready, selectedVehicleId, fitPadding]); // positions accessed via getPositions() — no dep needed
+  }, [ready, mapLoaded, selectedVehicleId, fitPadding]);
 
   // Fly-to selected vehicle
   useEffect(() => {
