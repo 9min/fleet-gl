@@ -26,7 +26,9 @@ const createCirclePolygon = (
 
   for (let i = 0; i < points; i++) {
     const angle = (2 * Math.PI * i) / points;
-    const jitter = 0.85 + Math.random() * 0.3;
+    // deterministic jitter: same shape on every run, still slightly irregular
+    const jitter =
+      1 + 0.15 * Math.sin((i + 1) * 12.9898 + center[0] * 78.233 + center[1] * 37.719);
     polygon.push([
       center[0] + Math.cos(angle) * lngDeg * jitter,
       center[1] + Math.sin(angle) * latDeg * jitter,
