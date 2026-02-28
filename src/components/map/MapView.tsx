@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Map, { type MapRef } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-import { MAP_CONFIG, ENTRY_ANIMATION } from '@/constants/map';
+import { MAP_CONFIG, ENTRY_ANIMATION, FIT_PADDING_DESKTOP, FIT_PADDING_MOBILE, AUTO_FIT_RESUME_DELAY } from '@/constants/map';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import { getMapStyle } from '@/api/vworld/tileConfig';
 import { useUIStore } from '@/stores/uiStore';
 import { useSimulationStore } from '@/stores/simulationStore';
@@ -19,16 +20,15 @@ type MapViewProps = {
   ready: boolean;
 };
 
-// Auto-fit: smoothly track the fleet bounding box
+// Auto-fit behavior configuration (MapView-specific)
 const AUTO_FIT_INTERVAL = 2000;
-const FIT_PADDING = { top: 100, bottom: 80, left: 80, right: 340 }; // right accounts for sidebar
 const FIT_DURATION = 1800;
-// Only refit when vehicle bbox vs viewport ratio drifts beyond these thresholds
-const ZOOM_OUT_RATIO = 0.20; // >20% of vehicles outside → zoom out
-const ZOOM_IN_RATIO = 0.30;  // viewport is >30% wider than bbox on each axis → zoom in
+const ZOOM_OUT_RATIO = 0.20;  // >20% of vehicles outside → zoom out
+const ZOOM_IN_RATIO = 0.50;  // bbox fills <50% of effective viewport → zoom in
 
 const MapView = ({ layers, positions, ready }: MapViewProps) => {
   const mapRef = useRef<MapRef>(null);
+  const isMobile = useIsMobile();
   const resolvedTheme = useThemeStore((s) => s.resolvedTheme);
   const mapStyle = useMemo(() => getMapStyle(resolvedTheme), [resolvedTheme]);
   const selectVehicle = useUIStore((s) => s.selectVehicle);
@@ -40,6 +40,7 @@ const MapView = ({ layers, positions, ready }: MapViewProps) => {
   } | null>(null);
   const entryDoneRef = useRef(false);
   const userInteractedRef = useRef(false);
+  const lastFitRef = useRef<[number, number, number, number] | null>(null); // [minLng, minLat, maxLng, maxLat]
   const positionsRef = useRef(positions);
   positionsRef.current = positions;
 
@@ -65,25 +66,50 @@ const MapView = ({ layers, positions, ready }: MapViewProps) => {
   }, []);
 
   // Track user manual interaction to pause auto-fit
+  // Uses originalEvent to distinguish user gestures from programmatic moves (fitBounds/flyTo)
   useEffect(() => {
     const map = mapRef.current?.getMap();
     if (!map) return;
-    const onInteract = () => { userInteractedRef.current = true; };
-    const onInteractEnd = () => {
-      // Resume auto-fit after 10s of no interaction
-      setTimeout(() => { userInteractedRef.current = false; }, 10000);
+
+    let interactionTimeout: number | null = null;
+
+    // MapLibre events include originalEvent only for user-initiated gestures
+    const isUserGesture = (e: { originalEvent?: unknown }) => !!e.originalEvent;
+
+    const onInteract = (e: { originalEvent?: unknown }) => {
+      if (!isUserGesture(e)) return;
+      userInteractedRef.current = true;
     };
+
+    const onInteractEnd = (e: { originalEvent?: unknown }) => {
+      if (!isUserGesture(e)) return;
+      // Clear previous timeout to prevent accumulation
+      if (interactionTimeout !== null) {
+        clearTimeout(interactionTimeout);
+      }
+      interactionTimeout = window.setTimeout(() => {
+        userInteractedRef.current = false;
+      }, AUTO_FIT_RESUME_DELAY);
+    };
+
     map.on('dragstart', onInteract);
     map.on('zoomstart', onInteract);
     map.on('dragend', onInteractEnd);
     map.on('zoomend', onInteractEnd);
+
     return () => {
       map.off('dragstart', onInteract);
       map.off('zoomstart', onInteract);
       map.off('dragend', onInteractEnd);
       map.off('zoomend', onInteractEnd);
+      if (interactionTimeout !== null) {
+        clearTimeout(interactionTimeout);
+      }
     };
   }, [ready]);
+
+  // Responsive padding based on screen size
+  const fitPadding = isMobile ? FIT_PADDING_MOBILE : FIT_PADDING_DESKTOP;
 
   // Auto-fit: zoom in/out to keep all running vehicles visible
   useEffect(() => {
@@ -108,44 +134,74 @@ const MapView = ({ layers, positions, ready }: MapViewProps) => {
       }
 
       const vBounds = map.getBounds();
-      const vW = vBounds.getEast() - vBounds.getWest();
-      const vH = vBounds.getNorth() - vBounds.getSouth();
       const bW = maxLng - minLng;
       const bH = maxLat - minLat;
 
-      // Check if vehicles are outside viewport → need zoom out
+      // Count vehicles outside visible bounds → need zoom out
       const outside = active.filter(
         (p) => p.lng < vBounds.getWest() || p.lng > vBounds.getEast() ||
                p.lat < vBounds.getSouth() || p.lat > vBounds.getNorth(),
       );
       const needZoomOut = outside.length / active.length > ZOOM_OUT_RATIO;
 
-      // Check if viewport is much wider than vehicle spread → can zoom in
-      const needZoomIn = vW > 0 && vH > 0 && bW > 0 && bH > 0 &&
-        (bW / vW < (1 - ZOOM_IN_RATIO)) && (bH / vH < (1 - ZOOM_IN_RATIO));
+      // Project bbox to screen pixels for accurate size comparison (handles pitch distortion)
+      const topLeftPx = map.project([minLng, maxLat]);
+      const bottomRightPx = map.project([maxLng, minLat]);
+      const bboxPxW = Math.abs(bottomRightPx.x - topLeftPx.x);
+      const bboxPxH = Math.abs(bottomRightPx.y - topLeftPx.y);
+      const canvas = map.getCanvas();
+      const effectiveW = canvas.clientWidth - fitPadding.left - fitPadding.right;
+      const effectiveH = canvas.clientHeight - fitPadding.top - fitPadding.bottom;
 
-      if (needZoomOut || needZoomIn) {
-        map.fitBounds(
-          [[minLng, minLat], [maxLng, maxLat]],
-          {
-            padding: FIT_PADDING,
-            pitch: MAP_CONFIG.pitch,
-            bearing: MAP_CONFIG.bearing,
-            duration: FIT_DURATION,
-            maxZoom: MAP_CONFIG.zoom,
-          },
-        );
+      // Zoom in only if bbox is tiny relative to the effective (padding-adjusted) viewport
+      const needZoomIn = effectiveW > 0 && effectiveH > 0 && bboxPxW > 0 && bboxPxH > 0 &&
+        bboxPxW < effectiveW * (1 - ZOOM_IN_RATIO) && bboxPxH < effectiveH * (1 - ZOOM_IN_RATIO);
+
+      // Zoom out if bbox exceeds effective viewport (vehicles spreading beyond padding area)
+      const bboxExceedsViewport = bboxPxW > effectiveW * 1.2 || bboxPxH > effectiveH * 1.2;
+
+      // Recenter if bbox center has drifted significantly from screen center
+      const bboxCenterPx = map.project([(minLng + maxLng) / 2, (minLat + maxLat) / 2]);
+      const screenCenterX = canvas.clientWidth / 2;
+      const screenCenterY = canvas.clientHeight / 2;
+      const driftX = Math.abs(bboxCenterPx.x - screenCenterX) / canvas.clientWidth;
+      const driftY = Math.abs(bboxCenterPx.y - screenCenterY) / canvas.clientHeight;
+      const needRecenter = driftX > 0.20 || driftY > 0.20;
+
+      if (needZoomOut || needZoomIn || needRecenter || bboxExceedsViewport) {
+        // Skip if bbox hasn't changed meaningfully since last fitBounds
+        // (prevents repeated fitBounds to the same target, e.g. when padding makes needZoomIn always true)
+        const last = lastFitRef.current;
+        const bboxChanged = !last ||
+          Math.abs(minLng - last[0]) > bW * 0.05 || Math.abs(minLat - last[1]) > bH * 0.05 ||
+          Math.abs(maxLng - last[2]) > bW * 0.05 || Math.abs(maxLat - last[3]) > bH * 0.05;
+
+        if (bboxChanged) {
+          lastFitRef.current = [minLng, minLat, maxLng, maxLat];
+          map.fitBounds(
+            [[minLng, minLat], [maxLng, maxLat]],
+            {
+              padding: fitPadding,
+              pitch: MAP_CONFIG.pitch,
+              bearing: MAP_CONFIG.bearing,
+              duration: FIT_DURATION,
+              maxZoom: MAP_CONFIG.zoom,
+            },
+          );
+        }
       }
     }, AUTO_FIT_INTERVAL);
     return () => clearInterval(interval);
-  }, [ready, selectedVehicleId]); // positions accessed via ref — no dep needed
+  }, [ready, selectedVehicleId, fitPadding]); // positions accessed via ref — no dep needed
 
   // Fly-to selected vehicle
   useEffect(() => {
     if (!selectedVehicleId || !positions.length) return;
     const v = positions.find((p) => p.vehicleId === selectedVehicleId);
     if (!v) return;
-    mapRef.current?.getMap()?.flyTo({
+    const map = mapRef.current?.getMap();
+    if (!map) return;
+    map.flyTo({
       center: [v.lng, v.lat],
       zoom: 14,
       pitch: 55,
