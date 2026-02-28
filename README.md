@@ -57,14 +57,14 @@
 ## 🛠 기술 스택
 
 ### 프론트엔드
-- **React 18** - UI 프레임워크
+- **React 18.3** - UI 프레임워크
 - **TypeScript 5.7** - 타입 안전성
-- **Vite 6** - 빌드 도구 및 개발 서버
+- **Vite 6.1** - 빌드 도구 및 개발 서버
 - **Tailwind CSS v4** - 스타일링 (`@theme` 블록 활용)
 
 ### 지도 & 3D
-- **Deck.gl 9** - WebGL 기반 대규모 데이터 시각화
-- **MapLibre GL JS 4** - 오픈소스 벡터 타일 렌더링
+- **Deck.gl 9.1/9.2** - WebGL 기반 대규모 데이터 시각화
+- **MapLibre GL JS 4.7** - 오픈소스 벡터 타일 렌더링
 - **react-map-gl 7** - React 맵 컴포넌트
 
 ### 상태 관리
@@ -74,9 +74,13 @@
 ### 차트 & 분석
 - **Recharts 2** - 반응형 차트 라이브러리
 
+### 다국어
+- **i18next 25** - 국제화 프레임워크
+- **react-i18next 16** - React 바인딩
+
 ### 개발 도구
-- **ESLint** - 코드 품질 검증
-- **Vitest** - 단위 테스트 프레임워크
+- **ESLint 9** - 코드 품질 검증
+- **Vitest 4** - 단위 테스트 프레임워크
 - **@testing-library/react** - 컴포넌트 테스팅
 
 ## 📁 프로젝트 구조
@@ -85,56 +89,91 @@
 fleet-gl/
 ├── src/
 │   ├── api/                 # 타일 설정 (다크/라이트 스타일)
-│   ├── components/          # React UI 컴포넌트
+│   │   └── vworld/tileConfig.ts
+│   ├── components/          # React UI 컴포넌트 (32개 파일)
 │   │   ├── alert/          # Toast, ToastContainer
-│   │   ├── analytics/      # 차트 컴포넌트 (4개)
+│   │   ├── analytics/      # AnalyticsPanel, 차트 4개
 │   │   ├── filter/         # FilterControls
-│   │   ├── layout/         # Header, Sidebar, LoadingScreen
-│   │   ├── map/            # MapView, DeckGLOverlay, LayerToggle
+│   │   ├── layout/         # Header, Layout, Sidebar, LoadingScreen, ShortcutGuide
+│   │   ├── map/            # MapView, DeckGLOverlay, LayerToggle, MapControls, VehicleTooltip
 │   │   ├── mobile/         # BottomSheet, MobileKPIBar, MobileTimeline
-│   │   ├── panel/          # StatsPanel, VehicleDetail, ExportMenu
+│   │   ├── panel/          # StatsPanel, VehicleDetail, KPIBar, ExportMenu, EventLog,
+│   │   │                   # ConnectionStatus, RouteProgress, PerformanceOverlay, AnimatedNumber
 │   │   └── timeline/       # Timeline, PlaybackControls
-│   ├── constants/           # 맵 설정 상수
-│   ├── hooks/              # 커스텀 훅 (10개 이상)
+│   ├── constants/           # 맵 설정 상수 (map.ts)
+│   ├── hooks/              # 커스텀 훅 (11개)
+│   │   ├── useVehicleData.ts
+│   │   ├── useInterpolation.ts
+│   │   ├── useDeckLayers.ts
 │   │   ├── useGeofenceAlerts.ts
+│   │   ├── useGeofenceData.ts
 │   │   ├── useAnalytics.ts
 │   │   ├── useWebSocket.ts
-│   │   └── useIsMobile.ts
-│   ├── layers/             # Deck.gl 레이어 팩토리
+│   │   ├── useIsMobile.ts
+│   │   ├── useSystemTheme.ts
+│   │   ├── useKeyboardShortcuts.ts
+│   │   └── usePerformanceMonitor.ts
+│   ├── i18n.ts             # i18next 설정
+│   ├── layers/             # Deck.gl 레이어 팩토리 (6개)
 │   │   ├── vehicleLayer.ts
 │   │   ├── tripsLayer.ts
+│   │   ├── labelLayer.ts
 │   │   ├── routeDetailLayer.ts
 │   │   ├── heatmapLayer.ts
 │   │   └── geofenceLayer.ts
 │   ├── services/           # MockWebSocket
-│   ├── stores/             # Zustand 스토어
+│   ├── stores/             # Zustand 스토어 (5개)
 │   │   ├── uiStore.ts
 │   │   ├── simulationStore.ts
 │   │   ├── themeStore.ts
 │   │   ├── alertStore.ts
 │   │   └── analyticsStore.ts
-│   ├── types/              # TypeScript 타입 정의
+│   ├── types/              # TypeScript 타입 정의 (7개)
 │   │   ├── vehicle.ts
 │   │   ├── route.ts
+│   │   ├── routeDetail.ts
 │   │   ├── geofence.ts
-│   │   └── analytics.ts
-│   ├── utils/              # 유틸리티 함수
+│   │   ├── analytics.ts
+│   │   ├── websocket.ts
+│   │   └── simulation.ts
+│   ├── utils/              # 유틸리티 함수 (6개)
 │   │   ├── geo.ts
 │   │   ├── format.ts
+│   │   ├── truckMesh.ts
 │   │   ├── pointInPolygon.ts
 │   │   ├── exportPng.ts
 │   │   └── exportCsv.ts
 │   ├── workers/            # Web Worker 로직
-│   │   └── interpolation.worker.ts
+│   │   ├── interpolation.worker.ts
+│   │   └── types.ts
 │   ├── App.tsx
 │   └── main.tsx
 ├── scripts/
+│   ├── extract-routes.ts        # 카카오 API로 실제 경로 추출
 │   ├── generateMockRoutes.ts    # 100개 차량 경로 생성
 │   └── generateGeofences.ts     # 40개 지오펜스 존 생성
 ├── public/
 │   └── routes/                  # 생성된 경로 JSON (100개)
 ├── CLAUDE.md                    # AI 코딩 컨텍스트
 └── package.json
+```
+
+## 🧪 테스트
+
+19개 테스트 파일 (총 146개 테스트):
+
+```bash
+# 단위 테스트 실행
+npm run test
+
+# watch 모드로 테스트
+npm run test:watch
+
+# 타입 체크
+npm run type-check
+
+# 린트 검사
+npm run lint
 ```
 
 ## 🚀 시작하기
@@ -147,7 +186,7 @@ fleet-gl/
 
 ```bash
 # 저장소 클론
-git clone https://github.com/yourusername/fleet-gl.git
+git clone https://github.com/9min/fleet-gl.git
 cd fleet-gl
 
 # 의존성 설치
@@ -159,7 +198,7 @@ npm install
 `.env` 파일을 루트에 생성하고 필요한 경우 API 키를 설정합니다:
 
 ```env
-VITE_VWORLD_API_KEY=your_api_key_here  # (선택사항)
+VITE_VWORLD_API_KEY=your_api_key_here  # (선택사항, 미설정 시 OpenFreeMap 벡터 타일 사용)
 ```
 
 ### 모의 데이터 생성
@@ -234,22 +273,6 @@ const store = useSimulationStore();
 
 // ✅ 필요한 필드만 구독
 const isPlaying = useSimulationStore((s) => s.isPlaying);
-```
-
-## 🧪 테스트
-
-```bash
-# 단위 테스트 실행
-npm run test
-
-# watch 모드로 테스트
-npm run test:watch
-
-# 타입 체크
-npm run type-check
-
-# 린트 검사
-npm run lint
 ```
 
 ## 📖 개발 가이드
