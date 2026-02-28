@@ -73,7 +73,7 @@ const VehicleDetail = ({ positions, routes }: VehicleDetailProps) => {
         <button
           onClick={handleClose}
           className="text-text-secondary hover:text-text-primary transition-colors text-lg leading-none"
-          aria-label="Close"
+          aria-label={t('common.close')}
         >
           &times;
         </button>

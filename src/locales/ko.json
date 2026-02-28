@@ -67,7 +67,12 @@
     "toggleFPS": "FPS 오버레이 전환",
     "deselect": "선택 해제 / 닫기",
     "toggleGuide": "이 가이드 전환",
-    "closeHint": "<kbd>?</kbd> 또는 <kbd>Esc</kbd>를 눌러 닫기"
+    "closeHintPrefix": "",
+    "closeHintOr": "또는",
+    "closeHintSuffix": "를 눌러 닫기"
+  },
+  "common": {
+    "close": "닫기"
   },
   "analytics": {
     "title": "분석",

@@ -67,7 +67,12 @@
     "toggleFPS": "Toggle FPS overlay",
     "deselect": "Deselect / Close",
     "toggleGuide": "Toggle this guide",
-    "closeHint": "Press <kbd>?</kbd> or <kbd>Esc</kbd> to close"
+    "closeHintPrefix": "Press",
+    "closeHintOr": "or",
+    "closeHintSuffix": "to close"
+  },
+  "common": {
+    "close": "Close"
   },
   "analytics": {
     "title": "Analytics",

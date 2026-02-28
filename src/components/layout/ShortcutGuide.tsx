@@ -61,7 +61,7 @@ const ShortcutGuide = () => {
         </div>
 
         <p className="text-[10px] text-text-secondary mt-4 text-center">
-          Press <kbd className="px-1 rounded bg-white/10 text-text-primary font-mono text-[10px]">?</kbd> or <kbd className="px-1 rounded bg-white/10 text-text-primary font-mono text-[10px]">Esc</kbd> to close
+          {t('shortcuts.closeHintPrefix')} <kbd className="px-1 rounded bg-white/10 text-text-primary font-mono text-[10px]">?</kbd> {t('shortcuts.closeHintOr')} <kbd className="px-1 rounded bg-white/10 text-text-primary font-mono text-[10px]">Esc</kbd> {t('shortcuts.closeHintSuffix')}
         </p>
       </div>
     </div>
