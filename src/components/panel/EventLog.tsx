@@ -1,7 +1,8 @@
+import { memo, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAnalyticsStore, type EventLogEntry } from '@/stores/analyticsStore';
 
-const EventItem = ({ event }: { event: EventLogEntry }) => {
+const EventItem = memo(({ event }: { event: EventLogEntry }) => {
   const time = new Date(event.timestamp).toLocaleTimeString('en-US', {
     hour12: false,
     hour: '2-digit',
@@ -28,12 +29,14 @@ const EventItem = ({ event }: { event: EventLogEntry }) => {
       </div>
     </div>
   );
-};
+});
 
-const EventLog = () => {
+EventItem.displayName = 'EventItem';
+
+const EventLog = memo(() => {
   const { t } = useTranslation();
   const eventLog = useAnalyticsStore((s) => s.eventLog);
-  const reversed = [...eventLog].reverse();
+  const reversed = useMemo(() => [...eventLog].reverse(), [eventLog]);
 
   if (reversed.length === 0) {
     return (
@@ -55,6 +58,8 @@ const EventLog = () => {
       </div>
     </div>
   );
-};
+});
+
+EventLog.displayName = 'EventLog';
 
 export default EventLog;

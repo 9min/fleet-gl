@@ -2,11 +2,17 @@ import { useControl } from 'react-map-gl/maplibre';
 import { MapboxOverlay } from '@deck.gl/mapbox';
 import type { MapboxOverlayProps } from '@deck.gl/mapbox';
 
-type DeckGLOverlayProps = MapboxOverlayProps;
+type DeckGLOverlayProps = MapboxOverlayProps & {
+  onOverlayReady?: (overlay: MapboxOverlay) => void;
+};
 
-const DeckGLOverlay = (props: DeckGLOverlayProps) => {
+const DeckGLOverlay = ({ onOverlayReady, ...props }: DeckGLOverlayProps) => {
   const overlay = useControl<MapboxOverlay>(
-    () => new MapboxOverlay(props),
+    () => {
+      const instance = new MapboxOverlay(props);
+      onOverlayReady?.(instance);
+      return instance;
+    },
   );
   overlay.setProps(props);
   return null;

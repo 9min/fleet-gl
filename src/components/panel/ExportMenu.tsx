@@ -4,11 +4,7 @@ import { exportMapScreenshot } from '@/utils/exportPng';
 import { exportVehiclePositions, exportFleetStats, exportGeofenceEvents } from '@/utils/exportCsv';
 import { useSimulationStore } from '@/stores/simulationStore';
 import { useAnalyticsStore } from '@/stores/analyticsStore';
-
-// We accept positions from the App level via a shared ref
-let _positions: { vehicleId: string; lng: number; lat: number; bearing: number; status: 'running' | 'idle' | 'completed' | 'delayed'; speed: number; waypointIndex: number; totalWaypoints: number }[] = [];
-
-export const setExportPositions = (p: typeof _positions) => { _positions = p; };
+import { getPositions } from '@/hooks/useInterpolation';
 
 const ExportMenu = () => {
   const { t } = useTranslation();
@@ -37,7 +33,7 @@ const ExportMenu = () => {
   }, []);
 
   const handleVehicleData = useCallback(() => {
-    exportVehiclePositions(_positions);
+    exportVehiclePositions(getPositions());
     setIsOpen(false);
   }, []);
 

@@ -3,7 +3,7 @@ import i18n from '@/i18n';
 import { useSimulationStore } from '@/stores/simulationStore';
 import { useAlertStore } from '@/stores/alertStore';
 import { pointInPolygon } from '@/utils/pointInPolygon';
-import type { VehiclePosition } from '@/types/vehicle';
+import { getPositions } from '@/hooks/useInterpolation';
 import type { GeofenceZone } from '@/types/geofence';
 
 const ALERT_TYPE_MAP = {
@@ -12,60 +12,63 @@ const ALERT_TYPE_MAP = {
   'delivery-area': 'success' as const,
 };
 
+const CHECK_INTERVAL = 1000; // 1 second
+
 export const useGeofenceAlerts = (
-  positions: VehiclePosition[],
   geofences: GeofenceZone[],
 ) => {
   // Track which vehicles are inside which zones
   const insideMapRef = useRef<Map<string, Set<string>>>(new Map());
-  const lastCheckTimeRef = useRef(0);
-
-  const isPlaying = useSimulationStore((s) => s.isPlaying);
-  const currentTime = useSimulationStore((s) => s.currentTime);
 
   useEffect(() => {
-    if (!isPlaying || geofences.length === 0 || positions.length === 0) return;
+    if (geofences.length === 0) return;
 
-    // Throttle to 1 check per second
-    if (currentTime - lastCheckTimeRef.current < 1) return;
-    lastCheckTimeRef.current = currentTime;
+    const interval = setInterval(() => {
+      const isPlaying = useSimulationStore.getState().isPlaying;
+      if (!isPlaying) return;
 
-    const addAlert = useAlertStore.getState().addAlert;
-    const insideMap = insideMapRef.current;
+      const positions = getPositions();
+      if (positions.length === 0) return;
 
-    // Check only a subset each tick for performance (25 vehicles at a time)
-    const checkCount = Math.min(positions.length, 25);
-    const startIdx = Math.floor(Math.random() * Math.max(1, positions.length - checkCount));
+      const addAlert = useAlertStore.getState().addAlert;
+      const insideMap = insideMapRef.current;
 
-    for (let vi = startIdx; vi < startIdx + checkCount && vi < positions.length; vi++) {
-      const v = positions[vi]!;
-      const point: [number, number] = [v.lng, v.lat];
+      // Check only a subset each tick for performance (25 vehicles at a time)
+      const checkCount = Math.min(positions.length, 25);
+      const startIdx = Math.floor(Math.random() * Math.max(1, positions.length - checkCount));
 
-      if (!insideMap.has(v.vehicleId)) {
-        insideMap.set(v.vehicleId, new Set());
-      }
-      const vehicleZones = insideMap.get(v.vehicleId)!;
+      for (let vi = startIdx; vi < startIdx + checkCount && vi < positions.length; vi++) {
+        const v = positions[vi]!;
+        const point: [number, number] = [v.lng, v.lat];
 
-      for (const zone of geofences) {
-        const isInside = pointInPolygon(point, zone.polygon);
-        const wasInside = vehicleZones.has(zone.id);
+        if (!insideMap.has(v.vehicleId)) {
+          insideMap.set(v.vehicleId, new Set());
+        }
+        const vehicleZones = insideMap.get(v.vehicleId)!;
 
-        if (isInside && !wasInside) {
-          vehicleZones.add(zone.id);
-          addAlert({
-            message: i18n.t('geofence.entered', { vehicleId: v.vehicleId, zoneName: zone.name }),
-            type: ALERT_TYPE_MAP[zone.type] ?? 'info',
-            zoneType: zone.type,
-          });
-        } else if (!isInside && wasInside) {
-          vehicleZones.delete(zone.id);
-          addAlert({
-            message: i18n.t('geofence.left', { vehicleId: v.vehicleId, zoneName: zone.name }),
-            type: 'warning',
-            zoneType: zone.type,
-          });
+        for (const zone of geofences) {
+          const isInside = pointInPolygon(point, zone.polygon);
+          const wasInside = vehicleZones.has(zone.id);
+
+          if (isInside && !wasInside) {
+            vehicleZones.add(zone.id);
+            addAlert({
+              message: i18n.t('geofence.entered', { vehicleId: v.vehicleId, zoneName: zone.name }),
+              type: ALERT_TYPE_MAP[zone.type] ?? 'info',
+              zoneType: zone.type,
+            });
+          } else if (!isInside && wasInside) {
+            vehicleZones.delete(zone.id);
+            addAlert({
+              message: i18n.t('geofence.left', { vehicleId: v.vehicleId, zoneName: zone.name }),
+              type: 'warning',
+              zoneType: zone.type,
+            });
+          }
         }
       }
-    }
-  }, [positions, geofences, isPlaying, currentTime]);
+    }, CHECK_INTERVAL);
+
+    return () => clearInterval(interval);
+  }, [geofences]);
 };
