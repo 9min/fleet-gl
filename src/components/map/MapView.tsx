@@ -80,6 +80,9 @@ const MapView = ({ ready }: MapViewProps) => {
     const onInteract = (e: { originalEvent?: unknown }) => {
       if (!isUserGesture(e)) return;
       userInteractedRef.current = true;
+      // Cancel any in-progress programmatic animation (fitBounds/panBy)
+      // so it doesn't fight with the user's gesture
+      map.stop();
     };
 
     const onInteractEnd = () => {
