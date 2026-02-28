@@ -82,8 +82,6 @@ const MapView = ({ ready }: MapViewProps) => {
     const onInteractStart = (e: { originalEvent?: unknown }) => {
       if (!isUserGesture(e)) return;
       lastUserInteractionRef.current = Date.now();
-      // Cancel any in-progress programmatic animation (fitBounds/panBy)
-      map.stop();
     };
 
     const onInteractEnd = (e: { originalEvent?: unknown }) => {
