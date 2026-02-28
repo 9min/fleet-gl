@@ -127,6 +127,7 @@ const MapView = ({ layers, positions, ready }: MapViewProps) => {
       const canvas = map.getCanvas();
       const effectiveW = canvas.clientWidth - fitPadding.left - fitPadding.right;
       const effectiveH = canvas.clientHeight - fitPadding.top - fitPadding.bottom;
+      if (effectiveW <= 0 || effectiveH <= 0) return;
       const effectiveCenterX = fitPadding.left + effectiveW / 2;
       const effectiveCenterY = fitPadding.top + effectiveH / 2;
 
@@ -160,21 +161,31 @@ const MapView = ({ layers, positions, ready }: MapViewProps) => {
       );
       const needZoomOut = outside.length / active.length > ZOOM_OUT_RATIO;
 
-      // Project actual vehicle bbox to screen pixels (handles pitch distortion)
-      const topLeftPx = map.project([minLng, maxLat]);
-      const bottomRightPx = map.project([maxLng, minLat]);
-      const bboxPxW = Math.abs(bottomRightPx.x - topLeftPx.x);
-      const bboxPxH = Math.abs(bottomRightPx.y - topLeftPx.y);
+      // Project all 4 corners to screen pixels (handles pitch + bearing distortion)
+      const projectedCorners = [
+        map.project([minLng, minLat]),
+        map.project([minLng, maxLat]),
+        map.project([maxLng, minLat]),
+        map.project([maxLng, maxLat]),
+      ];
+      const xs = projectedCorners.map((p) => p.x);
+      const ys = projectedCorners.map((p) => p.y);
+      const pMinX = Math.min(...xs);
+      const pMaxX = Math.max(...xs);
+      const pMinY = Math.min(...ys);
+      const pMaxY = Math.max(...ys);
+      const bboxPxW = pMaxX - pMinX;
+      const bboxPxH = pMaxY - pMinY;
 
       // Zoom in only if bbox is tiny relative to the effective viewport
-      const needZoomIn = effectiveW > 0 && effectiveH > 0 && bboxPxW > 0 && bboxPxH > 0 &&
+      const needZoomIn = bboxPxW > 0 && bboxPxH > 0 &&
         bboxPxW < effectiveW * (1 - ZOOM_IN_RATIO) && bboxPxH < effectiveH * (1 - ZOOM_IN_RATIO);
 
       // Zoom out if bbox exceeds effective viewport
       const bboxExceedsViewport = bboxPxW > effectiveW * 1.2 || bboxPxH > effectiveH * 1.2;
 
       // Recenter if bbox center has drifted from effective viewport center
-      const bboxCenterPx = map.project([(minLng + maxLng) / 2, (minLat + maxLat) / 2]);
+      const bboxCenterPx = { x: (pMinX + pMaxX) / 2, y: (pMinY + pMaxY) / 2 };
       const driftX = Math.abs(bboxCenterPx.x - effectiveCenterX) / effectiveW;
       const driftY = Math.abs(bboxCenterPx.y - effectiveCenterY) / effectiveH;
       const needRecenter = driftX > 0.15 || driftY > 0.15;
@@ -205,12 +216,23 @@ const MapView = ({ layers, positions, ready }: MapViewProps) => {
           const snapMinLat = minLat, snapMaxLat = maxLat;
           map.once('moveend', () => {
             if (userInteractedRef.current) return;
-            const postCenter = map.project([
-              (snapMinLng + snapMaxLng) / 2,
-              (snapMinLat + snapMaxLat) / 2,
-            ]);
-            const cx = fitPadding.left + (map.getCanvas().clientWidth - fitPadding.left - fitPadding.right) / 2;
-            const cy = fitPadding.top + (map.getCanvas().clientHeight - fitPadding.top - fitPadding.bottom) / 2;
+            const postCorners = [
+              map.project([snapMinLng, snapMinLat]),
+              map.project([snapMinLng, snapMaxLat]),
+              map.project([snapMaxLng, snapMinLat]),
+              map.project([snapMaxLng, snapMaxLat]),
+            ];
+            const postXs = postCorners.map((p) => p.x);
+            const postYs = postCorners.map((p) => p.y);
+            const postCenter = {
+              x: (Math.min(...postXs) + Math.max(...postXs)) / 2,
+              y: (Math.min(...postYs) + Math.max(...postYs)) / 2,
+            };
+            const postEffW = map.getCanvas().clientWidth - fitPadding.left - fitPadding.right;
+            const postEffH = map.getCanvas().clientHeight - fitPadding.top - fitPadding.bottom;
+            if (postEffW <= 0 || postEffH <= 0) return;
+            const cx = fitPadding.left + postEffW / 2;
+            const cy = fitPadding.top + postEffH / 2;
             const dx = postCenter.x - cx;
             const dy = postCenter.y - cy;
             if (Math.abs(dx) > 15 || Math.abs(dy) > 15) {
