@@ -1,9 +1,11 @@
 import { memo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useAnalyticsStore } from '@/stores/analyticsStore';
 import { useThemeStore } from '@/stores/themeStore';
 
 const VehiclePerformanceChart = memo(() => {
+  const { t } = useTranslation();
   const vehicleMetrics = useAnalyticsStore((s) => s.vehicleMetrics);
   const resolvedTheme = useThemeStore((s) => s.resolvedTheme);
   const isDark = resolvedTheme === 'dark';
@@ -17,7 +19,7 @@ const VehiclePerformanceChart = memo(() => {
   return (
     <div className="h-48">
       <h4 className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">
-        Top 10 Vehicle Performance
+        {t('charts.topPerformance')}
       </h4>
       <ResponsiveContainer width="100%" height="85%">
         <BarChart data={data}>
@@ -32,7 +34,7 @@ const VehiclePerformanceChart = memo(() => {
               fontSize: '11px',
               color: isDark ? '#E8ECF1' : '#1A2332',
             }}
-            formatter={(value: number) => [`${value}%`, 'Completion']}
+            formatter={(value: number) => [`${value}%`, t('charts.completion')]}
           />
           <Bar dataKey="rate" fill="#00D4FF" radius={[4, 4, 0, 0]} />
         </BarChart>

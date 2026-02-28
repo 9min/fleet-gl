@@ -1,4 +1,5 @@
 import { useSimulationStore } from '@/stores/simulationStore';
+import { useTranslation } from 'react-i18next';
 import { formatTime } from '@/utils/format';
 import AnimatedNumber from './AnimatedNumber';
 
@@ -52,6 +53,7 @@ const KPICard = ({ label, value, total, color, formatter }: KPICardProps) => {
 };
 
 const KPIBar = () => {
+  const { t } = useTranslation();
   const stats = useSimulationStore((s) => s.stats);
   const currentTime = useSimulationStore((s) => s.currentTime);
   const isPlaying = useSimulationStore((s) => s.isPlaying);
@@ -67,7 +69,7 @@ const KPIBar = () => {
           <span className={`relative w-2 h-2 rounded-full ${isPlaying ? 'bg-accent-red' : 'bg-text-secondary'}`} />
         </div>
         <span className="font-mono text-xs text-text-primary">
-          {isPlaying ? 'LIVE' : 'PAUSED'}
+          {isPlaying ? t('kpi.live') : t('kpi.paused')}
         </span>
         <span className="font-mono text-xs text-accent-cyan">
           {formatTime(currentTime)}
@@ -75,25 +77,25 @@ const KPIBar = () => {
       </div>
 
       <KPICard
-        label="Vehicles"
+        label={t('kpi.vehicles')}
         value={stats.totalVehicles}
         total={stats.totalVehicles}
         color="#00D4FF"
       />
       <KPICard
-        label="Active"
+        label={t('kpi.active')}
         value={stats.running}
         total={stats.totalVehicles}
         color="#00D4FF"
       />
       <KPICard
-        label="Completed"
+        label={t('kpi.completed')}
         value={stats.completed}
         total={stats.totalVehicles}
         color="#00FF88"
       />
       <KPICard
-        label="Progress"
+        label={t('kpi.progress')}
         value={stats.progressPercent}
         total={100}
         color="#00FF88"

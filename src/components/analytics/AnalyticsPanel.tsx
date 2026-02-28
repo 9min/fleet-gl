@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useUIStore } from '@/stores/uiStore';
 import DeliveryTrendsChart from './DeliveryTrendsChart';
 import VehiclePerformanceChart from './VehiclePerformanceChart';
@@ -8,14 +9,15 @@ import EventLog from '@/components/panel/EventLog';
 
 type Tab = 'overview' | 'performance' | 'delays' | 'events';
 
-const TABS: { key: Tab; label: string }[] = [
-  { key: 'overview', label: 'Overview' },
-  { key: 'performance', label: 'Performance' },
-  { key: 'delays', label: 'Delays' },
-  { key: 'events', label: 'Events' },
+const TAB_KEYS: { key: Tab; tKey: string }[] = [
+  { key: 'overview', tKey: 'analytics.overview' },
+  { key: 'performance', tKey: 'analytics.performance' },
+  { key: 'delays', tKey: 'analytics.delays' },
+  { key: 'events', tKey: 'analytics.events' },
 ];
 
 const AnalyticsPanel = () => {
+  const { t } = useTranslation();
   const isOpen = useUIStore((s) => s.isAnalyticsPanelOpen);
   const togglePanel = useUIStore((s) => s.toggleAnalyticsPanel);
   const [activeTab, setActiveTab] = useState<Tab>('overview');
@@ -30,11 +32,11 @@ const AnalyticsPanel = () => {
     <div className="absolute top-4 left-4 bottom-4 w-[380px] z-20 glass-panel animate-slide-in-left overflow-hidden flex flex-col pointer-events-auto">
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-4 pb-2">
-        <h2 className="text-sm font-bold text-text-primary">Analytics</h2>
+        <h2 className="text-sm font-bold text-text-primary">{t('analytics.title')}</h2>
         <button
           onClick={handleClose}
           className="text-text-secondary hover:text-text-primary transition-colors text-lg leading-none"
-          aria-label="Close analytics"
+          aria-label={t('common.close')}
         >
           &times;
         </button>
@@ -42,7 +44,7 @@ const AnalyticsPanel = () => {
 
       {/* Tabs */}
       <div className="flex px-4 gap-1 border-b border-white/10">
-        {TABS.map((tab) => (
+        {TAB_KEYS.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
@@ -52,7 +54,7 @@ const AnalyticsPanel = () => {
                 : 'text-text-secondary hover:text-text-primary'
             }`}
           >
-            {tab.label}
+            {t(tab.tKey)}
           </button>
         ))}
       </div>

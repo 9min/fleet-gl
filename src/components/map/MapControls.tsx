@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { MAP_CONFIG } from '@/constants/map';
 
 type MapControlsProps = {
@@ -6,6 +7,8 @@ type MapControlsProps = {
 };
 
 const MapControls = ({ onResetCamera }: MapControlsProps) => {
+  const { t } = useTranslation();
+
   const handleReset = useCallback(() => {
     onResetCamera();
   }, [onResetCamera]);
@@ -16,7 +19,7 @@ const MapControls = ({ onResetCamera }: MapControlsProps) => {
         onClick={handleReset}
         className="w-8 h-8 flex items-center justify-center rounded-md bg-bg-card/80 backdrop-blur-xl border border-white/10 text-text-secondary hover:text-text-primary transition-colors"
         title={`Reset to ${MAP_CONFIG.center[1].toFixed(2)}, ${MAP_CONFIG.center[0].toFixed(2)}`}
-        aria-label="Reset camera"
+        aria-label={t('map.resetCamera')}
       >
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
           <circle cx="8" cy="8" r="3" />

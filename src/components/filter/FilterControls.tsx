@@ -1,15 +1,17 @@
 import { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useUIStore } from '@/stores/uiStore';
 import type { VehicleStatus } from '@/types/vehicle';
 
-const FILTER_OPTIONS: { status: VehicleStatus; label: string; color: string }[] = [
-  { status: 'running', label: 'Running', color: '#00D4FF' },
-  { status: 'idle', label: 'Idle', color: '#FFB800' },
-  { status: 'completed', label: 'Completed', color: '#00FF88' },
-  { status: 'delayed', label: 'Delayed', color: '#FF4757' },
+const FILTER_OPTIONS: { status: VehicleStatus; tKey: string; color: string }[] = [
+  { status: 'running', tKey: 'status.running', color: '#00D4FF' },
+  { status: 'idle', tKey: 'status.idle', color: '#FFB800' },
+  { status: 'completed', tKey: 'status.completed', color: '#00FF88' },
+  { status: 'delayed', tKey: 'status.delayed', color: '#FF4757' },
 ];
 
 const FilterControls = () => {
+  const { t } = useTranslation();
   const activeFilters = useUIStore((s) => s.filters.status);
   const setStatusFilter = useUIStore((s) => s.setStatusFilter);
 
@@ -29,7 +31,7 @@ const FilterControls = () => {
 
   return (
     <div className="flex items-center gap-1">
-      {FILTER_OPTIONS.map(({ status, label, color }) => {
+      {FILTER_OPTIONS.map(({ status, tKey, color }) => {
         const isActive = activeFilters.includes(status);
         return (
           <button
@@ -45,7 +47,7 @@ const FilterControls = () => {
               className="w-1.5 h-1.5 rounded-full"
               style={{ backgroundColor: isActive ? color : '#8892A0' }}
             />
-            {label}
+            {t(tKey)}
           </button>
         );
       })}

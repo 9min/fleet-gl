@@ -1,4 +1,5 @@
 import { useCallback, useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { exportMapScreenshot } from '@/utils/exportPng';
 import { exportVehiclePositions, exportFleetStats, exportGeofenceEvents } from '@/utils/exportCsv';
 import { useSimulationStore } from '@/stores/simulationStore';
@@ -10,6 +11,7 @@ let _positions: { vehicleId: string; lng: number; lat: number; bearing: number; 
 export const setExportPositions = (p: typeof _positions) => { _positions = p; };
 
 const ExportMenu = () => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -57,7 +59,7 @@ const ExportMenu = () => {
       <button
         onClick={handleToggle}
         className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors"
-        title="Export data"
+        title={t('export.exportData')}
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -73,28 +75,28 @@ const ExportMenu = () => {
             className="flex items-center gap-2 w-full px-3 py-2 rounded-lg hover:bg-white/5 text-left transition-colors"
           >
             <span className="text-xs text-text-secondary">PNG</span>
-            <span className="text-xs text-text-primary">Screenshot</span>
+            <span className="text-xs text-text-primary">{t('export.screenshot')}</span>
           </button>
           <button
             onClick={handleVehicleData}
             className="flex items-center gap-2 w-full px-3 py-2 rounded-lg hover:bg-white/5 text-left transition-colors"
           >
             <span className="text-xs text-text-secondary">CSV</span>
-            <span className="text-xs text-text-primary">Vehicle Data</span>
+            <span className="text-xs text-text-primary">{t('export.vehicleData')}</span>
           </button>
           <button
             onClick={handleFleetSummary}
             className="flex items-center gap-2 w-full px-3 py-2 rounded-lg hover:bg-white/5 text-left transition-colors"
           >
             <span className="text-xs text-text-secondary">CSV</span>
-            <span className="text-xs text-text-primary">Fleet Summary</span>
+            <span className="text-xs text-text-primary">{t('export.fleetSummary')}</span>
           </button>
           <button
             onClick={handleGeofenceEvents}
             className="flex items-center gap-2 w-full px-3 py-2 rounded-lg hover:bg-white/5 text-left transition-colors"
           >
             <span className="text-xs text-text-secondary">CSV</span>
-            <span className="text-xs text-text-primary">Event Log</span>
+            <span className="text-xs text-text-primary">{t('export.eventLog')}</span>
           </button>
         </div>
       )}

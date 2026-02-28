@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import MapView from '@/components/map/MapView';
 import Layout from '@/components/layout/Layout';
 import Sidebar from '@/components/layout/Sidebar';
@@ -23,6 +24,7 @@ import { setExportPositions } from '@/components/panel/ExportMenu';
 import type { Layer } from '@deck.gl/core';
 
 const App = () => {
+  const { t } = useTranslation();
   const { routes, loading } = useVehicleData();
   const { positions, ready, seek } = useInterpolation(routes);
   const { geofences } = useGeofenceData();
@@ -65,7 +67,7 @@ const App = () => {
   if (loading || !ready) {
     return (
       <LoadingScreen
-        message={loading ? 'Loading route data...' : 'Initializing simulation engine...'}
+        message={loading ? t('loading.loadingRoutes') : t('loading.initEngine')}
       />
     );
   }

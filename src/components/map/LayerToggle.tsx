@@ -1,18 +1,20 @@
 import { useCallback, useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useUIStore } from '@/stores/uiStore';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
 type LayerKey = 'vehicles' | 'trails' | 'heatmap' | 'density' | 'geofences';
 
-const LAYER_OPTIONS: { key: LayerKey; label: string; color: string }[] = [
-  { key: 'vehicles', label: 'Vehicles', color: '#00D4FF' },
-  { key: 'trails', label: 'Trails', color: '#00D4FF' },
-  { key: 'heatmap', label: 'Heatmap', color: '#FF4757' },
-  { key: 'density', label: 'Density', color: '#00FF88' },
-  { key: 'geofences', label: 'Geofences', color: '#FFB800' },
+const LAYER_OPTIONS: { key: LayerKey; tKey: string; color: string }[] = [
+  { key: 'vehicles', tKey: 'layers.vehicles', color: '#00D4FF' },
+  { key: 'trails', tKey: 'layers.trails', color: '#00D4FF' },
+  { key: 'heatmap', tKey: 'layers.heatmap', color: '#FF4757' },
+  { key: 'density', tKey: 'layers.density', color: '#00FF88' },
+  { key: 'geofences', tKey: 'layers.geofences', color: '#FFB800' },
 ];
 
 const LayerToggle = () => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const layerVisibility = useUIStore((s) => s.layerVisibility);
   const toggleLayer = useUIStore((s) => s.toggleLayer);
@@ -45,7 +47,7 @@ const LayerToggle = () => {
       <button
         onClick={handleToggle}
         className="glass-panel w-8 h-8 flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors pointer-events-auto"
-        title="Toggle layers"
+        title={t('layers.toggleLayers')}
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <polygon points="12 2 2 7 12 12 22 7 12 2" />
@@ -56,7 +58,7 @@ const LayerToggle = () => {
 
       {isOpen && (
         <div className="glass-panel mt-2 p-2 min-w-[140px] pointer-events-auto">
-          {LAYER_OPTIONS.map(({ key, label, color }) => (
+          {LAYER_OPTIONS.map(({ key, tKey, color }) => (
             <button
               key={key}
               onClick={() => toggleLayer(key)}
@@ -70,7 +72,7 @@ const LayerToggle = () => {
                 }}
               />
               <span className={`text-xs ${layerVisibility[key] ? 'text-text-primary' : 'text-text-secondary'}`}>
-                {label}
+                {t(tKey)}
               </span>
             </button>
           ))}

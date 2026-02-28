@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useAnalyticsStore, type EventLogEntry } from '@/stores/analyticsStore';
 
 const EventItem = ({ event }: { event: EventLogEntry }) => {
@@ -30,13 +31,14 @@ const EventItem = ({ event }: { event: EventLogEntry }) => {
 };
 
 const EventLog = () => {
+  const { t } = useTranslation();
   const eventLog = useAnalyticsStore((s) => s.eventLog);
   const reversed = [...eventLog].reverse();
 
   if (reversed.length === 0) {
     return (
       <div className="flex items-center justify-center h-32 text-text-secondary text-xs">
-        No events yet. Start the simulation to see events.
+        {t('events.noEvents')}
       </div>
     );
   }
@@ -44,7 +46,7 @@ const EventLog = () => {
   return (
     <div className="flex flex-col">
       <h4 className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">
-        Event Log ({eventLog.length})
+        {t('events.eventLog')} ({eventLog.length})
       </h4>
       <div className="flex flex-col max-h-[60vh] overflow-y-auto">
         {reversed.map((event) => (

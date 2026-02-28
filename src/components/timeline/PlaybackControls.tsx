@@ -1,10 +1,12 @@
 import { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSimulationStore } from '@/stores/simulationStore';
 import type { PlaybackSpeed } from '@/types/simulation';
 
 const SPEEDS: PlaybackSpeed[] = [60, 120, 300, 600];
 
 const PlaybackControls = () => {
+  const { t } = useTranslation();
   const isPlaying = useSimulationStore((s) => s.isPlaying);
   const playbackSpeed = useSimulationStore((s) => s.playbackSpeed);
   const togglePlay = useSimulationStore((s) => s.togglePlay);
@@ -22,7 +24,7 @@ const PlaybackControls = () => {
       <button
         onClick={togglePlay}
         className="w-8 h-8 flex items-center justify-center rounded-md bg-accent-cyan/20 hover:bg-accent-cyan/30 text-accent-cyan transition-colors"
-        aria-label={isPlaying ? 'Pause' : 'Play'}
+        aria-label={isPlaying ? t('playback.pause') : t('playback.play')}
       >
         {isPlaying ? (
           <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">

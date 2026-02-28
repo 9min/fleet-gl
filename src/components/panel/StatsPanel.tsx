@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useSimulationStore } from '@/stores/simulationStore';
 import AnimatedNumber from './AnimatedNumber';
 
@@ -30,6 +31,7 @@ const StatRow = ({ label, value, total, color }: StatRowProps) => {
 };
 
 const StatsPanel = () => {
+  const { t } = useTranslation();
   const stats = useSimulationStore((s) => s.stats);
   const isPlaying = useSimulationStore((s) => s.isPlaying);
 
@@ -37,7 +39,7 @@ const StatsPanel = () => {
     <div className="glass-panel p-4 flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <h2 className="text-sm font-semibold text-text-primary">Fleet Status</h2>
+          <h2 className="text-sm font-semibold text-text-primary">{t('status.fleetStatus')}</h2>
           {isPlaying && (
             <span className="relative flex items-center">
               <span className="absolute w-2.5 h-2.5 rounded-full bg-accent-red animate-pulse-live" />
@@ -52,17 +54,17 @@ const StatsPanel = () => {
       </div>
 
       <div className="flex flex-col gap-2">
-        <StatRow label="Running" value={stats.running} total={stats.totalVehicles} color="#00D4FF" />
-        <StatRow label="Idle" value={stats.idle} total={stats.totalVehicles} color="#FFB800" />
-        <StatRow label="Completed" value={stats.completed} total={stats.totalVehicles} color="#00FF88" />
+        <StatRow label={t('status.running')} value={stats.running} total={stats.totalVehicles} color="#00D4FF" />
+        <StatRow label={t('status.idle')} value={stats.idle} total={stats.totalVehicles} color="#FFB800" />
+        <StatRow label={t('status.completed')} value={stats.completed} total={stats.totalVehicles} color="#00FF88" />
         {stats.delayed > 0 && (
-          <StatRow label="Delayed" value={stats.delayed} total={stats.totalVehicles} color="#FF4757" />
+          <StatRow label={t('status.delayed')} value={stats.delayed} total={stats.totalVehicles} color="#FF4757" />
         )}
       </div>
 
       <div className="border-t border-white/10 pt-2">
         <div className="flex items-center justify-between">
-          <span className="text-text-secondary text-sm">Progress</span>
+          <span className="text-text-secondary text-sm">{t('kpi.progress')}</span>
           <AnimatedNumber
             value={stats.progressPercent}
             className="font-mono text-sm text-accent-green"

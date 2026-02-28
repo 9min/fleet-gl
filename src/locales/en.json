@@ -1,0 +1,123 @@
+{
+  "header": {
+    "title": "logi-twin",
+    "subtitle": "3D logistics",
+    "analytics": "Analytics (A)",
+    "themeToggle": "Switch to {{mode}} mode (T)",
+    "shortcuts": "Keyboard shortcuts (?)"
+  },
+  "kpi": {
+    "vehicles": "Vehicles",
+    "active": "Active",
+    "completed": "Completed",
+    "progress": "Progress",
+    "live": "LIVE",
+    "paused": "PAUSED"
+  },
+  "status": {
+    "running": "Running",
+    "idle": "Idle",
+    "completed": "Completed",
+    "delayed": "Delayed",
+    "fleetStatus": "Fleet Status"
+  },
+  "vehicle": {
+    "status": "Status:",
+    "waypoint": "Waypoint",
+    "position": "Position",
+    "bearing": "Bearing",
+    "routeProgress": "Route Progress"
+  },
+  "tooltip": {
+    "status": "Status",
+    "progress": "Progress"
+  },
+  "export": {
+    "exportData": "Export data",
+    "screenshot": "Screenshot",
+    "vehicleData": "Vehicle Data",
+    "fleetSummary": "Fleet Summary",
+    "eventLog": "Event Log"
+  },
+  "events": {
+    "noEvents": "No events yet. Start the simulation to see events.",
+    "eventLog": "Event Log"
+  },
+  "connection": {
+    "connected": "Connected",
+    "disconnected": "Disconnected"
+  },
+  "loading": {
+    "title": "logi-twin",
+    "subtitle": "3D Logistics Dashboard",
+    "loadingRoutes": "Loading route data...",
+    "initEngine": "Initializing simulation engine..."
+  },
+  "shortcuts": {
+    "title": "Keyboard Shortcuts",
+    "playPause": "Play / Pause",
+    "seekBackward": "Seek backward 5 min",
+    "seekForward": "Seek forward 5 min",
+    "speed1": "Speed ×1 (60s/s)",
+    "speed2": "Speed ×2 (120s/s)",
+    "speed3": "Speed ×5 (300s/s)",
+    "speed4": "Speed ×10 (600s/s)",
+    "toggleTheme": "Toggle dark/light theme",
+    "toggleAnalytics": "Toggle analytics panel",
+    "toggleFPS": "Toggle FPS overlay",
+    "deselect": "Deselect / Close",
+    "toggleGuide": "Toggle this guide",
+    "closeHintPrefix": "Press",
+    "closeHintOr": "or",
+    "closeHintSuffix": "to close"
+  },
+  "common": {
+    "close": "Close"
+  },
+  "analytics": {
+    "title": "Analytics",
+    "overview": "Overview",
+    "performance": "Performance",
+    "delays": "Delays",
+    "events": "Events"
+  },
+  "charts": {
+    "deliveryTrends": "Delivery Trends",
+    "fleetDistribution": "Fleet Status Distribution",
+    "delayTrends": "Progress & Delay Trends",
+    "topPerformance": "Top 10 Vehicle Performance",
+    "completion": "Completion"
+  },
+  "layers": {
+    "vehicles": "Vehicles",
+    "trails": "Trails",
+    "heatmap": "Heatmap",
+    "density": "Density",
+    "geofences": "Geofences",
+    "toggleLayers": "Toggle layers"
+  },
+  "perf": {
+    "fps": "FPS",
+    "heap": "Heap",
+    "vehicles": "Vehicles",
+    "pressP": "Press P to toggle"
+  },
+  "playback": {
+    "play": "Play",
+    "pause": "Pause"
+  },
+  "map": {
+    "resetCamera": "Reset camera"
+  },
+  "geofence": {
+    "entered": "{{vehicleId}} entered {{zoneName}}",
+    "left": "{{vehicleId}} left {{zoneName}}"
+  },
+  "theme": {
+    "light": "light",
+    "dark": "dark"
+  },
+  "lang": {
+    "switchLanguage": "Switch language"
+  }
+}

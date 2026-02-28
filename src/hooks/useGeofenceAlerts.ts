@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import i18n from '@/i18n';
 import { useSimulationStore } from '@/stores/simulationStore';
 import { useAlertStore } from '@/stores/alertStore';
 import { pointInPolygon } from '@/utils/pointInPolygon';
@@ -52,14 +53,14 @@ export const useGeofenceAlerts = (
         if (isInside && !wasInside) {
           vehicleZones.add(zone.id);
           addAlert({
-            message: `${v.vehicleId} entered ${zone.name}`,
+            message: i18n.t('geofence.entered', { vehicleId: v.vehicleId, zoneName: zone.name }),
             type: ALERT_TYPE_MAP[zone.type] ?? 'info',
             zoneType: zone.type,
           });
         } else if (!isInside && wasInside) {
           vehicleZones.delete(zone.id);
           addAlert({
-            message: `${v.vehicleId} left ${zone.name}`,
+            message: i18n.t('geofence.left', { vehicleId: v.vehicleId, zoneName: zone.name }),
             type: 'warning',
             zoneType: zone.type,
           });

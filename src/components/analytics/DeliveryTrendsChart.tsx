@@ -1,25 +1,27 @@
 import { memo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useAnalyticsStore } from '@/stores/analyticsStore';
 import { formatTime } from '@/utils/format';
 import { useThemeStore } from '@/stores/themeStore';
 
 const DeliveryTrendsChart = memo(() => {
+  const { t } = useTranslation();
   const timeSeries = useAnalyticsStore((s) => s.timeSeries);
   const resolvedTheme = useThemeStore((s) => s.resolvedTheme);
   const isDark = resolvedTheme === 'dark';
 
   const data = timeSeries.map((p) => ({
     time: formatTime(p.time),
-    Completed: p.completed,
-    Running: p.running,
-    Idle: p.idle,
+    completed: p.completed,
+    running: p.running,
+    idle: p.idle,
   }));
 
   return (
     <div className="h-48">
       <h4 className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">
-        Delivery Trends
+        {t('charts.deliveryTrends')}
       </h4>
       <ResponsiveContainer width="100%" height="85%">
         <AreaChart data={data}>
@@ -35,9 +37,9 @@ const DeliveryTrendsChart = memo(() => {
               color: isDark ? '#E8ECF1' : '#1A2332',
             }}
           />
-          <Area type="monotone" dataKey="Completed" stackId="1" stroke="#00FF88" fill="#00FF88" fillOpacity={0.3} />
-          <Area type="monotone" dataKey="Running" stackId="1" stroke="#00D4FF" fill="#00D4FF" fillOpacity={0.3} />
-          <Area type="monotone" dataKey="Idle" stackId="1" stroke="#FFB800" fill="#FFB800" fillOpacity={0.2} />
+          <Area type="monotone" dataKey="completed" name={t('status.completed')} stackId="1" stroke="#00FF88" fill="#00FF88" fillOpacity={0.3} />
+          <Area type="monotone" dataKey="running" name={t('status.running')} stackId="1" stroke="#00D4FF" fill="#00D4FF" fillOpacity={0.3} />
+          <Area type="monotone" dataKey="idle" name={t('status.idle')} stackId="1" stroke="#FFB800" fill="#FFB800" fillOpacity={0.2} />
         </AreaChart>
       </ResponsiveContainer>
     </div>

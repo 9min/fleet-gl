@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import FilterControls from '@/components/filter/FilterControls';
 import { useUIStore } from '@/stores/uiStore';
 import { useThemeStore } from '@/stores/themeStore';
@@ -10,6 +11,7 @@ type HeaderProps = {
 };
 
 const Header = ({ wsConnected = false }: HeaderProps) => {
+  const { t, i18n } = useTranslation();
   const toggleShortcutGuide = useUIStore((s) => s.toggleShortcutGuide);
   const toggleAnalyticsPanel = useUIStore((s) => s.toggleAnalyticsPanel);
   const toggleTheme = useThemeStore((s) => s.toggleTheme);
@@ -27,11 +29,17 @@ const Header = ({ wsConnected = false }: HeaderProps) => {
     toggleAnalyticsPanel();
   }, [toggleAnalyticsPanel]);
 
+  const handleLanguageToggle = useCallback(() => {
+    const next = i18n.language === 'ko' ? 'en' : 'ko';
+    i18n.changeLanguage(next);
+    localStorage.setItem('language', next);
+  }, [i18n]);
+
   return (
     <header className="h-12 flex items-center justify-between px-4 bg-bg-card/80 backdrop-blur-xl border-b border-white/10">
       <div className="flex items-center gap-3">
-        <span className="text-accent-cyan font-bold text-lg tracking-tight">logi-twin</span>
-        <span className="text-text-secondary text-xs hidden sm:inline">3D logistics</span>
+        <span className="text-accent-cyan font-bold text-lg tracking-tight">{t('header.title')}</span>
+        <span className="text-text-secondary text-xs hidden sm:inline">{t('header.subtitle')}</span>
         <ConnectionStatus connected={wsConnected} />
       </div>
 
@@ -43,7 +51,7 @@ const Header = ({ wsConnected = false }: HeaderProps) => {
         <button
           onClick={handleAnalyticsClick}
           className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors"
-          title="Analytics (A)"
+          title={t('header.analytics')}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="18" y1="20" x2="18" y2="10" />
@@ -57,7 +65,7 @@ const Header = ({ wsConnected = false }: HeaderProps) => {
         <button
           onClick={handleThemeToggle}
           className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors"
-          title={`Switch to ${resolvedTheme === 'dark' ? 'light' : 'dark'} mode (T)`}
+          title={t('header.themeToggle', { mode: resolvedTheme === 'dark' ? t('theme.light') : t('theme.dark') })}
         >
           {resolvedTheme === 'dark' ? (
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -77,11 +85,19 @@ const Header = ({ wsConnected = false }: HeaderProps) => {
             </svg>
           )}
         </button>
+        {/* Language toggle */}
+        <button
+          onClick={handleLanguageToggle}
+          className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors font-bold text-xs"
+          title={t('lang.switchLanguage')}
+        >
+          {i18n.language === 'ko' ? 'EN' : '한'}
+        </button>
         {/* Shortcut guide */}
         <button
           onClick={handleShortcutClick}
           className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors"
-          title="Keyboard shortcuts (?)"
+          title={t('header.shortcuts')}
         >
           <span className="font-mono text-xs font-bold">?</span>
         </button>
