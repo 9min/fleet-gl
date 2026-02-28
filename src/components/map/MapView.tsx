@@ -8,15 +8,13 @@ import { getMapStyle } from '@/api/vworld/tileConfig';
 import { useUIStore } from '@/stores/uiStore';
 import { useSimulationStore } from '@/stores/simulationStore';
 import { useThemeStore } from '@/stores/themeStore';
+import { setOverlayInstance, getPositions, getVehicleById } from '@/hooks/useInterpolation';
 import DeckGLOverlay from './DeckGLOverlay';
 import VehicleTooltip from './VehicleTooltip';
 import type { PickingInfo } from '@deck.gl/core';
 import type { VehiclePosition } from '@/types/vehicle';
-import type { Layer } from '@deck.gl/core';
 
 type MapViewProps = {
-  layers: Layer[];
-  positions: VehiclePosition[];
   ready: boolean;
 };
 
@@ -26,7 +24,7 @@ const FIT_DURATION = 1800;
 const ZOOM_OUT_RATIO = 0.20;  // >20% of vehicles outside → zoom out
 const ZOOM_IN_RATIO = 0.50;  // bbox fills <50% of effective viewport → zoom in
 
-const MapView = ({ layers, positions, ready }: MapViewProps) => {
+const MapView = ({ ready }: MapViewProps) => {
   const mapRef = useRef<MapRef>(null);
   const isMobile = useIsMobile();
   const resolvedTheme = useThemeStore((s) => s.resolvedTheme);
@@ -41,8 +39,11 @@ const MapView = ({ layers, positions, ready }: MapViewProps) => {
   const entryDoneRef = useRef(false);
   const userInteractedRef = useRef(false);
   const lastFitRef = useRef<[number, number, number, number] | null>(null); // [minLng, minLat, maxLng, maxLat]
-  const positionsRef = useRef(positions);
-  positionsRef.current = positions;
+
+  // Register overlay instance for direct Deck.gl updates
+  const handleOverlayReady = useCallback((overlay: import('@deck.gl/mapbox').MapboxOverlay) => {
+    setOverlayInstance(overlay);
+  }, []);
 
   // Cinematic entry animation — triggered on map load
   const handleMapLoad = useCallback(() => {
@@ -120,7 +121,7 @@ const MapView = ({ layers, positions, ready }: MapViewProps) => {
       const map = mapRef.current?.getMap();
       if (!map || map.isMoving()) return;
 
-      const cur = positionsRef.current;
+      const cur = getPositions();
       const active = cur.filter((p) => p.status === 'running' || p.status === 'idle');
       if (active.length < 2) return;
 
@@ -243,12 +244,12 @@ const MapView = ({ layers, positions, ready }: MapViewProps) => {
       }
     }, AUTO_FIT_INTERVAL);
     return () => clearInterval(interval);
-  }, [ready, selectedVehicleId, fitPadding]); // positions accessed via ref — no dep needed
+  }, [ready, selectedVehicleId, fitPadding]); // positions accessed via getPositions() — no dep needed
 
   // Fly-to selected vehicle
   useEffect(() => {
-    if (!selectedVehicleId || !positions.length) return;
-    const v = positions.find((p) => p.vehicleId === selectedVehicleId);
+    if (!selectedVehicleId) return;
+    const v = getVehicleById(selectedVehicleId);
     if (!v) return;
     const map = mapRef.current?.getMap();
     if (!map) return;
@@ -258,7 +259,7 @@ const MapView = ({ layers, positions, ready }: MapViewProps) => {
       pitch: 55,
       duration: 1500,
     });
-  }, [selectedVehicleId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedVehicleId]);
 
   const handleClick = useCallback(
     (info: PickingInfo) => {
@@ -295,7 +296,11 @@ const MapView = ({ layers, positions, ready }: MapViewProps) => {
       mapStyle={mapStyle}
       onLoad={handleMapLoad}
     >
-      <DeckGLOverlay layers={layers} onClick={handleClick} onHover={handleHover} />
+      <DeckGLOverlay
+        onOverlayReady={handleOverlayReady}
+        onClick={handleClick}
+        onHover={handleHover}
+      />
       {hoverInfo && (
         <VehicleTooltip
           x={hoverInfo.x}

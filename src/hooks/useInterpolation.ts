@@ -1,20 +1,48 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { useSimulationStore } from '@/stores/simulationStore';
+import { buildLayers, initTripsData, initGeofenceData } from '@/hooks/useDeckLayers';
+import type { MapboxOverlay } from '@deck.gl/mapbox';
 import type { VehicleRoute } from '@/types/route';
 import type { VehiclePosition, VehicleStatus } from '@/types/vehicle';
+import type { GeofenceZone } from '@/types/geofence';
 import type { WorkerOutMessage } from '@/workers/types';
 
 const STATUS_MAP: VehicleStatus[] = ['running', 'idle', 'completed', 'delayed'];
 
-export const useInterpolation = (routes: VehicleRoute[]) => {
+// --- Module-level positions (React bypass) ---
+let currentPositions: VehiclePosition[] = [];
+export const getPositions = () => currentPositions;
+export const getVehicleById = (id: string) =>
+  currentPositions.find((v) => v.vehicleId === id) ?? null;
+
+// --- Overlay instance for direct Deck.gl updates ---
+let overlayInstance: MapboxOverlay | null = null;
+export const setOverlayInstance = (ov: MapboxOverlay) => {
+  overlayInstance = ov;
+};
+
+// --- Routes reference for buildLayers ---
+let currentRoutes: VehicleRoute[] = [];
+
+export const useInterpolation = (routes: VehicleRoute[], geofences: GeofenceZone[]) => {
   const workerRef = useRef<Worker | null>(null);
   const rafRef = useRef<number>(0);
   const lastTimeRef = useRef<number>(0);
   const simTimeRef = useRef<number>(0);
-  const [positions, setPositions] = useState<VehiclePosition[]>([]);
   const [ready, setReady] = useState(false);
   const vehicleIdsRef = useRef<string[]>([]);
   const totalWaypointsRef = useRef<number[]>([]);
+
+  // Keep module-level routes in sync and init cached data
+  useEffect(() => {
+    if (routes.length === 0) return;
+    currentRoutes = routes;
+    initTripsData(routes);
+  }, [routes]);
+
+  useEffect(() => {
+    initGeofenceData(geofences);
+  }, [geofences]);
 
   // Initialize worker when routes are loaded
   useEffect(() => {
@@ -60,7 +88,15 @@ export const useInterpolation = (routes: VehicleRoute[]) => {
             };
           }
 
-          setPositions(newPositions);
+          // Store in module-level variable (React bypass!)
+          currentPositions = newPositions;
+
+          // Directly update Deck.gl layers (no React re-render)
+          if (overlayInstance) {
+            const layers = buildLayers(newPositions, currentRoutes);
+            overlayInstance.setProps({ layers });
+          }
+
           break;
         }
 
@@ -133,5 +169,5 @@ export const useInterpolation = (routes: VehicleRoute[]) => {
     workerRef.current?.postMessage({ type: 'SEEK', targetTime: time });
   }, []);
 
-  return { positions, ready, seek };
+  return { ready, seek };
 };

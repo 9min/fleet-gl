@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSimulationStore } from '@/stores/simulationStore';
 import AnimatedNumber from './AnimatedNumber';
@@ -30,7 +31,7 @@ const StatRow = ({ label, value, total, color }: StatRowProps) => {
   );
 };
 
-const StatsPanel = () => {
+const StatsPanel = memo(() => {
   const { t } = useTranslation();
   const stats = useSimulationStore((s) => s.stats);
   const isPlaying = useSimulationStore((s) => s.isPlaying);
@@ -80,6 +81,8 @@ const StatsPanel = () => {
       </div>
     </div>
   );
-};
+});
+
+StatsPanel.displayName = 'StatsPanel';
 
 export default StatsPanel;

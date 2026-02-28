@@ -1,14 +1,13 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useUIStore } from '@/stores/uiStore';
-import { useSimulationStore } from '@/stores/simulationStore';
+import { getVehicleById } from '@/hooks/useInterpolation';
 import RouteProgress from './RouteProgress';
 import type { VehiclePosition } from '@/types/vehicle';
 import type { VehicleRoute } from '@/types/route';
 import type { WaypointProgress } from '@/types/routeDetail';
 
 type VehicleDetailProps = {
-  positions: VehiclePosition[];
   routes: VehicleRoute[];
 };
 
@@ -26,20 +25,31 @@ const STATUS_DOT_COLORS: Record<string, string> = {
   delayed: '#FF4757',
 };
 
-const VehicleDetail = ({ positions, routes }: VehicleDetailProps) => {
+const POLL_INTERVAL = 500; // ms — low-frequency polling for UI display
+
+const VehicleDetail = ({ routes }: VehicleDetailProps) => {
   const { t } = useTranslation();
   const selectedVehicleId = useUIStore((s) => s.selectedVehicleId);
   const selectVehicle = useUIStore((s) => s.selectVehicle);
-  const currentTime = useSimulationStore((s) => s.currentTime);
+  const [vehicle, setVehicle] = useState<VehiclePosition | null>(null);
 
   const handleClose = useCallback(() => {
     selectVehicle(null);
   }, [selectVehicle]);
 
-  const vehicle = useMemo(() => {
-    if (!selectedVehicleId) return null;
-    return positions.find((v) => v.vehicleId === selectedVehicleId) ?? null;
-  }, [positions, selectedVehicleId]);
+  // Poll for selected vehicle data at low frequency
+  useEffect(() => {
+    if (!selectedVehicleId) {
+      setVehicle(null);
+      return;
+    }
+    // Immediate read
+    setVehicle(getVehicleById(selectedVehicleId));
+    const id = setInterval(() => {
+      setVehicle(getVehicleById(selectedVehicleId));
+    }, POLL_INTERVAL);
+    return () => clearInterval(id);
+  }, [selectedVehicleId]);
 
   const waypointProgress = useMemo((): WaypointProgress[] => {
     if (!selectedVehicleId || !vehicle) return [];
@@ -49,8 +59,8 @@ const VehicleDetail = ({ positions, routes }: VehicleDetailProps) => {
     return route.waypoints.map((wp, i) => {
       const isCompleted = vehicle.waypointIndex > i;
       const isCurrent = vehicle.waypointIndex === i && vehicle.status !== 'completed';
-      // Simulate slight deviation for completed waypoints
-      const deviation = isCompleted ? Math.floor(Math.random() * 600 - 200) : 0;
+      // Deterministic deviation based on waypoint index (no Math.random())
+      const deviation = isCompleted ? (vehicle.waypointIndex * 7 + i * 13) % 600 - 200 : 0;
 
       return {
         name: wp.name,
@@ -62,7 +72,7 @@ const VehicleDetail = ({ positions, routes }: VehicleDetailProps) => {
         lat: wp.lat,
       };
     });
-  }, [selectedVehicleId, vehicle?.waypointIndex, vehicle?.status, routes, currentTime]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedVehicleId, vehicle?.waypointIndex, vehicle?.status, routes]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!vehicle) return null;
 

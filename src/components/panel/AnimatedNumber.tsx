@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 
 type AnimatedNumberProps = {
   value: number;
@@ -7,7 +7,7 @@ type AnimatedNumberProps = {
   formatter?: (n: number) => string;
 };
 
-const AnimatedNumber = ({
+const AnimatedNumber = memo(({
   value,
   duration = 600,
   className,
@@ -41,6 +41,8 @@ const AnimatedNumber = ({
       {formatter ? formatter(display) : display}
     </span>
   );
-};
+});
+
+AnimatedNumber.displayName = 'AnimatedNumber';
 
 export default AnimatedNumber;
